@@ -36,40 +36,12 @@ class WPvivid_Staging_List extends WP_List_Table
         return array( 'widefat', 'plugins', $this->_args['plural'] );
     }
 
-    public function print_column_headers( $with_id = true )
-    {
-        list( $columns, $hidden, $sortable, $primary ) = $this->get_column_info();
-
-        foreach ( $columns as $column_key => $column_display_name ) {
-            $class = array( 'manage-column', "column-$column_key" );
-
-            if ( in_array( $column_key, $hidden ) ) {
-                $class[] = 'hidden';
-            }
-
-            if ( $column_key === $primary )
-            {
-                $class[] = 'column-primary';
-            }
-
-            $tag   = ( 'cb' === $column_key ) ? 'td' : 'th';
-            $scope = ( 'th' === $tag ) ? 'scope="col"' : '';
-            $id    = $with_id ? "id='$column_key'" : '';
-
-            if ( ! empty( $class ) ) {
-                $class = "class='" . join( ' ', $class ) . "'";
-            }
-
-            echo "<$tag $scope $id $class>$column_display_name</$tag>";
-        }
-    }
-
     public function get_columns()
     {
         $posts_columns = array();
 
-        $posts_columns['pic']  = _('');
-        $posts_columns['info'] = _('');
+        $posts_columns['pic']  ='';
+        $posts_columns['info'] = '';
 
         return $posts_columns;
     }
@@ -102,7 +74,7 @@ class WPvivid_Staging_List extends WP_List_Table
         echo '<td class="column-primary" style="margin: 10px;">
                     <div>
                           <div style="margin:auto; width:100px; height:100px; right:50%;">
-                            <img src="'.$url.'">
+                            <img src="'.esc_url($url).'">
                           </div>
                           <div class="'.esc_attr($item['id']).'" style="margin-top:10px;">
                             <div class="wpvivid-delete-staging-site" style="margin: auto;width: 70px;background-color:#f1f1f1; padding-top:4px;padding-bottom:4px; cursor:pointer;text-align:center;" title="Delete the stating site">Delete</div>
@@ -186,22 +158,42 @@ class WPvivid_Staging_List extends WP_List_Table
 
         echo '<td class="column-description desc" colspan="2">
                         <div style="border-left:4px solid #00a0d2;padding-left:10px;float:left;">
-                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>'.$site_url.':</strong></span><span class="wpvivid-element-space-right">'.$site_url_link.'</span></div>
-                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>'.$admin_url.':</strong></span><span class="wpvivid-element-space-right">'.$admin_url_link.'</span></div>
+                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>'.esc_url($site_url).':</strong></span><span class="wpvivid-element-space-right">';
+        if($site_url_link=="'N/A'")
+        {
+            echo esc_html($site_url_link);
+        }
+        else
+        {
+            $site_url = esc_url($item['site']['home_url']);
+            echo '<a href="'.esc_url($site_url).'" target="_blank">'.esc_html($site_url).'</a>';
+        }
+                            echo '</span></div>
+                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>'.esc_url($admin_url).':</strong></span><span class="wpvivid-element-space-right">';
+        if($admin_url_link=="'N/A'")
+        {
+            echo esc_html($admin_url_link);
+        }
+        else
+        {
+            $admin_url = esc_url($item['site']['home_url'].'/'.$admin_name.'/');
+            $admin_url_link = '<a href="'.esc_url($admin_url).'" target="_blank">'.esc_html($admin_url).'</a>';
+        }
+        echo '</span></div>
                         </div>
                         <div style="clear:both"></div>
                         <div style="border-left:4px solid #00a0d2;padding-left:10px;float:left;">
-                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>Database:</strong></span><span class="wpvivid-element-space-right">'.__($db_name).'</span></div>
-                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>Table Prefix:</strong></span><span class="wpvivid-element-space-right">'.__($prefix).'</span></div>
-                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>Site Directory:</strong></span><span class="wpvivid-element-space-right">'.__($site_dir).'</span></div>
+                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>Database:</strong></span><span class="wpvivid-element-space-right">'.esc_html($db_name).'</span></div>
+                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>Table Prefix:</strong></span><span class="wpvivid-element-space-right">'.esc_html($prefix).'</span></div>
+                            <div style="height:20px;display:block;float:left;"><span class="wpvivid-element-space-right"><strong>Site Directory:</strong></span><span class="wpvivid-element-space-right">'.esc_html($site_dir).'</span></div>
                         </div>
                         <div style="clear:both"></div>
-                        <div class="wpvivid-copy-staging-to-live-block '.$class_btn.' '.$mu_single_class.'" style="margin-top: 10px;">
+                        <div class="wpvivid-copy-staging-to-live-block '.esc_attr($class_btn).' '.esc_attr($mu_single_class).'" style="margin-top: 10px;">
                             <div>
-                                <input class="button-primary wpvivid-copy-staging-to-live '.$class_btn.' '.$mu_single_class.'" type="button" value="'.$copy_btn.'" style="margin-right: 10px;" />
-                                <input class="button-primary wpvivid-update-live-to-staging '.$class_btn.' '.$mu_single_class.'" type="button" value="'.$update_btn.'" />
+                                <input class="button-primary wpvivid-copy-staging-to-live '.esc_attr($class_btn).' '.esc_attr($mu_single_class).'" type="button" value="'.esc_attr($copy_btn).'" style="margin-right: 10px;" />
+                                <input class="button-primary wpvivid-update-live-to-staging '.esc_attr($class_btn).' '.esc_attr($mu_single_class).'" type="button" value="'.esc_attr($update_btn).'" />
                             </div>
-                            <div style="border: 1px solid #f1f1f1; border-radius: 6px; margin-top: 10px;padding:5px;"><span>'.$tip_text.'</span></div>
+                            <div style="border: 1px solid #f1f1f1; border-radius: 6px; margin-top: 10px;padding:5px;"><span>'.esc_html($tip_text).'</span></div>
                         </div>
                     </td>';
     }
@@ -247,27 +239,27 @@ class WPvivid_Staging_List extends WP_List_Table
         }
 
         ?>
-        <tr class="<?php echo $item['id']; ?>">
+        <tr class="<?php echo esc_attr($item['id']); ?>">
             <td class="column-primary" style="border-top:1px solid #f1f1f1; border-bottom:1px solid #f1f1f1;" colspan="3" >
-                <span><strong><?php echo $text; ?>: </strong></span><span><?php echo _($staging_site_name); ?></span>
+                <span><strong><?php echo esc_html($text); ?>: </strong></span><span><?php echo esc_html($staging_site_name); ?></span>
                 <?php
                 if(isset($item['site']['mu_single']))
                 {
                     $site_id=$item['site']['mu_single_site_id'];
                     $site_url=get_site_url($site_id);
                     ?>
-                    <span style="margin-left: 20px;"><strong>Live Site: </strong></span><span><?php echo _($site_url); ?></span>
+                    <span style="margin-left: 20px;"><strong>Live Site: </strong></span><span><?php echo esc_html($site_url); ?></span>
                     <?php
                 }
                 else{
                     ?>
-                    <span style="margin-left: 20px;"><strong>Live Site: </strong></span><span><?php echo $live_domain; ?></span>
+                    <span style="margin-left: 20px;"><strong>Live Site: </strong></span><span><?php echo esc_html($live_domain); ?></span>
                     <?php
                 }
                 ?>
             </td>
         </tr>
-        <tr id="<?php echo $item['id']; ?>" class="<?php echo $item['id']; ?>">
+        <tr id="<?php echo esc_attr($item['id']); ?>" class="<?php echo esc_attr($item['id']); ?>">
             <?php $this->single_row_columns( $item ); ?>
         </tr>
         <?php
@@ -278,7 +270,7 @@ class WPvivid_Staging_List extends WP_List_Table
 
         $this->screen->render_screen_reader_content( 'heading_list' );
         ?>
-        <table class="wp-list-table <?php echo implode( ' ', $this->get_table_classes() ); ?>" style="border: 1px solid #f1f1f1; border-top: none;">
+        <table class="wp-list-table <?php echo esc_attr(implode( ' ', $this->get_table_classes() )); ?>" style="border: 1px solid #f1f1f1; border-top: none;">
             <thead>
             <tr>
                 <?php $this->print_column_headers(); ?>
@@ -288,7 +280,7 @@ class WPvivid_Staging_List extends WP_List_Table
             <tbody id="the-list"
                 <?php
                 if ( $singular ) {
-                    echo " data-wp-lists='list:$singular'";
+                    echo esc_attr(" data-wp-lists='list:$singular'");
                 }
                 ?>
             >
@@ -350,50 +342,6 @@ class WPvivid_Staging_MU_Site_List_Free extends WP_List_Table
         return array( 'widefat striped' );
     }
 
-    public function print_column_headers( $with_id = true )
-    {
-        list( $columns, $hidden, $sortable, $primary ) = $this->get_column_info();
-
-        if (!empty($columns['cb']))
-        {
-            static $cb_counter = 1;
-            $columns['cb'] = '<label class="screen-reader-text" for="cb-select-all-' . $cb_counter . '">' . __('Select All', 'wpvivid-backuprestore') . '</label>'
-                . '<input id="cb-select-all-' . $cb_counter . '" type="checkbox"/>';
-            $cb_counter++;
-        }
-
-        foreach ( $columns as $column_key => $column_display_name )
-        {
-            $class = array( 'manage-column', "column-$column_key" );
-
-            if ( in_array( $column_key, $hidden ) )
-            {
-                $class[] = 'hidden';
-            }
-
-            if ( $column_key === $primary )
-            {
-                $class[] = 'column-primary';
-            }
-
-            if ( $column_key === 'cb' )
-            {
-                $class[] = 'check-column';
-            }
-
-            $tag   = ( 'cb' === $column_key ) ? 'td' : 'th';
-            $scope = ( 'th' === $tag ) ? 'scope="col"' : '';
-            $id    = $with_id ? "id='$column_key'" : '';
-
-            if ( ! empty( $class ) )
-            {
-                $class = "class='" . join( ' ', $class ) . "'";
-            }
-
-            echo "<$tag $scope $id $class>$column_display_name</$tag>";
-        }
-    }
-
     public function get_columns()
     {
         $sites_columns = array(
@@ -432,9 +380,9 @@ class WPvivid_Staging_MU_Site_List_Free extends WP_List_Table
         $subsite_id = get_object_vars($subsite)["blog_id"];
         $blogname = get_object_vars($subsite)["domain"].get_object_vars($subsite)["path"];
         ?>
-        <label class="screen-reader-text" for="blog_<?php echo $subsite_id; ?>">
+        <label class="screen-reader-text" for="blog_<?php echo esc_attr($subsite_id); ?>">
             <?php
-            printf( __( 'Select %s', 'wpvivid-backuprestore' ), $blogname );
+            printf( 'Select %s', esc_html($blogname) );
             ?>
         </label>
         <input type="checkbox" name="<?php echo esc_attr( $this->type ); ?>" value="<?php echo esc_attr( $subsite_id ); ?>" checked />
@@ -444,7 +392,7 @@ class WPvivid_Staging_MU_Site_List_Free extends WP_List_Table
     public function column_id( $subsite )
     {
         $subsite_id = get_object_vars($subsite)["blog_id"];
-        echo $subsite_id;
+        echo esc_attr($subsite_id);
     }
 
     public function column_blogname( $subsite )
@@ -453,7 +401,7 @@ class WPvivid_Staging_MU_Site_List_Free extends WP_List_Table
         $blogname    = untrailingslashit( get_object_vars($subsite)['domain'] . get_object_vars($subsite)['path'] );
         ?>
         <strong>
-            <a href="<?php echo esc_url( network_admin_url( 'site-info.php?id=' .$subsite_id ) ); ?>" class="edit"><?php echo $blogname; ?></a>
+            <a href="<?php echo esc_url( network_admin_url( 'site-info.php?id=' .$subsite_id ) ); ?>" class="edit"><?php echo esc_html($blogname); ?></a>
         </strong>
         <?php
     }
@@ -485,13 +433,13 @@ class WPvivid_Staging_MU_Site_List_Free extends WP_List_Table
     public function column_title( $subsite )
     {
         switch_to_blog( get_object_vars($subsite)["blog_id"] );
-        echo ( get_option( 'blogname' ) ) ;
+        echo esc_html( get_option( 'blogname' ) ) ;
         restore_current_blog();
     }
 
     public function column_description( $subsite ) {
         switch_to_blog( get_object_vars($subsite)["blog_id"] );
-        echo (  get_option( 'blogdescription ' ) ) ;
+        echo esc_html(  get_option( 'blogdescription ' ) ) ;
         restore_current_blog();
     }
 
@@ -683,7 +631,7 @@ class WPvivid_Staging_MU_Site_List_Free extends WP_List_Table
         if ( $total_pages >1)
         {
             ?>
-            <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php esc_attr_e($css_type); ?>">
+            <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php echo esc_attr($css_type); ?>">
                 <?php
                 $this->extra_tablenav( $which );
                 $this->pagination( $which );
@@ -702,7 +650,7 @@ class WPvivid_Staging_MU_Site_List_Free extends WP_List_Table
 
         $this->screen->render_screen_reader_content( 'heading_list' );
         ?>
-        <table class="wp-list-table <?php echo implode( ' ', $this->get_table_classes() ); ?>" >
+        <table class="wp-list-table <?php echo esc_attr(implode( ' ', $this->get_table_classes() )); ?>" >
             <thead>
             <tr>
                 <?php $this->print_column_headers(); ?>
@@ -712,7 +660,7 @@ class WPvivid_Staging_MU_Site_List_Free extends WP_List_Table
             <tbody id="the-list"
                 <?php
                 if ( $singular ) {
-                    echo " data-wp-lists='list:$singular'";
+                    echo esc_attr(" data-wp-lists='list:$singular'");
                 }
                 ?>
             >
@@ -765,58 +713,10 @@ class WPvivid_Staging_MU_Single_Site_List_Free extends WP_List_Table
         return array( 'widefat striped' );
     }
 
-    public function print_column_headers( $with_id = true )
-    {
-        list( $columns, $hidden, $sortable, $primary ) = $this->get_column_info();
-
-        /*
-        if (!empty($columns['cb']))
-        {
-            static $cb_counter = 1;
-            $columns['cb'] = '<label class="screen-reader-text" for="cb-select-all-' . $cb_counter . '">' . __('Select All') . '</label>'
-                . '<input id="cb-select-all-' . $cb_counter . '" type="checkbox"/>';
-            $cb_counter++;
-        }
-        */
-
-        foreach ( $columns as $column_key => $column_display_name )
-        {
-
-            $class = array( 'manage-column', "column-$column_key" );
-
-            if ( in_array( $column_key, $hidden ) )
-            {
-                $class[] = 'hidden';
-            }
-
-
-            if ( $column_key === $primary )
-            {
-                $class[] = 'column-primary';
-            }
-
-            if ( $column_key === 'cb' )
-            {
-                //$class[] = 'check-column';
-            }
-            $tag='th';
-            //$tag   = ( 'cb' === $column_key ) ? 'td' : 'th';
-            $scope = ( 'th' === $tag ) ? 'scope="col"' : '';
-            $id    = $with_id ? "id='$column_key'" : '';
-
-            if ( ! empty( $class ) )
-            {
-                $class = "class='" . join( ' ', $class ) . "'";
-            }
-
-            echo "<$tag $scope $id $class>$column_display_name</$tag>";
-        }
-    }
-
     public function get_columns()
     {
         $sites_columns = array(
-            'cb'          => __( ' ', 'wpvivid-backuprestore' ),
+            'cb'          => ' ',
             'blogname'    => __( 'Subsite URL', 'wpvivid-backuprestore' ),
             //'tables_folders'=>__( 'Subsite Tables/Folders', 'wpvivid-backuprestore' ),
             'title' => __( 'Subsite Title', 'wpvivid-backuprestore' ),
@@ -851,9 +751,9 @@ class WPvivid_Staging_MU_Single_Site_List_Free extends WP_List_Table
         $subsite_id = get_object_vars($subsite)["blog_id"];
         $blogname = get_object_vars($subsite)["domain"].get_object_vars($subsite)["path"];
         ?>
-        <label class="screen-reader-text" for="blog_<?php echo $subsite_id; ?>">
+        <label class="screen-reader-text" for="blog_<?php echo esc_attr($subsite_id); ?>">
             <?php
-            printf( __( 'Select %s', 'wpvivid-backuprestore' ), $blogname );
+            printf( 'Select %s', esc_html($blogname) );
             ?>
         </label>
         <input type="checkbox" name="<?php echo esc_attr( $this->type ); ?>" value="<?php echo esc_attr( $subsite_id ); ?>" />
@@ -863,7 +763,7 @@ class WPvivid_Staging_MU_Single_Site_List_Free extends WP_List_Table
     public function column_id( $subsite )
     {
         $subsite_id = get_object_vars($subsite)["blog_id"];
-        echo $subsite_id;
+        echo esc_html($subsite_id);
     }
 
     public function column_blogname( $subsite )
@@ -872,7 +772,7 @@ class WPvivid_Staging_MU_Single_Site_List_Free extends WP_List_Table
         $blogname    = untrailingslashit( get_object_vars($subsite)['domain'] . get_object_vars($subsite)['path'] );
         ?>
         <strong>
-            <a href="<?php echo esc_url( network_admin_url( 'site-info.php?id=' .$subsite_id ) ); ?>" class="edit"><?php echo $blogname; ?></a>
+            <a href="<?php echo esc_url( network_admin_url( 'site-info.php?id=' .$subsite_id ) ); ?>" class="edit"><?php echo esc_html($blogname); ?></a>
         </strong>
         <?php
     }
@@ -904,13 +804,13 @@ class WPvivid_Staging_MU_Single_Site_List_Free extends WP_List_Table
     public function column_title( $subsite )
     {
         switch_to_blog( get_object_vars($subsite)["blog_id"] );
-        echo ( get_option( 'blogname' ) ) ;
+        echo esc_html( get_option( 'blogname' ) ) ;
         restore_current_blog();
     }
 
     public function column_description( $subsite ) {
         switch_to_blog( get_object_vars($subsite)["blog_id"] );
-        echo (  get_option( 'blogdescription ' ) ) ;
+        echo esc_html(  get_option( 'blogdescription ' ) ) ;
         restore_current_blog();
     }
 
@@ -1102,7 +1002,7 @@ class WPvivid_Staging_MU_Single_Site_List_Free extends WP_List_Table
         if ( $total_pages >1)
         {
             ?>
-            <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php esc_attr_e($css_type); ?>">
+            <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php echo esc_attr($css_type); ?>">
                 <?php
                 $this->extra_tablenav( $which );
                 $this->pagination( $which );
@@ -1121,7 +1021,7 @@ class WPvivid_Staging_MU_Single_Site_List_Free extends WP_List_Table
 
         $this->screen->render_screen_reader_content( 'heading_list' );
         ?>
-        <table class="wp-list-table <?php echo implode( ' ', $this->get_table_classes() ); ?>" >
+        <table class="wp-list-table <?php echo esc_attr(implode( ' ', $this->get_table_classes() )); ?>" >
             <thead>
             <tr>
                 <?php $this->print_column_headers(); ?>
@@ -1131,7 +1031,7 @@ class WPvivid_Staging_MU_Single_Site_List_Free extends WP_List_Table
             <tbody id="the-list"
                 <?php
                 if ( $singular ) {
-                    echo " data-wp-lists='list:$singular'";
+                    echo esc_attr(" data-wp-lists='list:$singular'");
                 }
                 ?>
             >
@@ -1209,7 +1109,7 @@ class WPvivid_Custom_MU_Staging_List
                     <input type="checkbox" checked disabled/>
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-wordpress-core">WordPress Core</td>
-                <td class="column-description desc"><?php _e($core_descript); ?></td>
+                <td class="column-description desc"><?php echo esc_html($core_descript); ?></td>
             </tr>
             <!-------- database -------->
             <tr style="cursor:pointer;">
@@ -1219,7 +1119,7 @@ class WPvivid_Custom_MU_Staging_List
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-database-detail">Database</td>
                 <td class="column-description desc wpvivid-handle-database-detail database-desc">
-                    <?php _e($db_descript); ?>
+                    <?php echo esc_html($db_descript); ?>
                 </td>
             </tr>
             <!-------- uploads -------->
@@ -1229,14 +1129,14 @@ class WPvivid_Custom_MU_Staging_List
                     <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-uploads-check" checked disabled/>
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-uploads-detail">wp-content/uploads</td>
-                <td class="column-description desc wpvivid-handle-uploads-detail uploads-desc"><?php _e($uploads_descript); ?></td>
+                <td class="column-description desc wpvivid-handle-uploads-detail uploads-desc"><?php echo esc_html($uploads_descript); ?></td>
                 <th class="wpvivid-handle-uploads-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
                         <summary title="Show detail" style="float: right; color: #a0a5aa;"></summary>
                     </details>
                 </th>
             </tr>
-            <tr class="wpvivid-custom-detail wpvivid-uploads-detail wpvivid-close" style="<?php esc_attr_e($uploads_text_style); ?> display: none;">
+            <tr class="wpvivid-custom-detail wpvivid-uploads-detail wpvivid-close" style="<?php echo esc_attr($uploads_text_style); ?> display: none;">
                 <th class="check-column"></th>
                 <td colspan="3" class="plugin-title column-primary">
                     <table class="wp-list-table widefat plugins" style="width:100%;">
@@ -1282,7 +1182,7 @@ class WPvivid_Custom_MU_Staging_List
                     </table>
                     <div style="margin-top: 10px;">
                         <div style="float: left; margin-right: 10px;">
-                            <input type="text" class="regular-text wpvivid-uploads-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php esc_attr_e($upload_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
+                            <input type="text" class="regular-text wpvivid-uploads-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php echo esc_attr($upload_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
                             <input type="button" class="wpvivid-uploads-extension-rule-btn" value="Save" />
                         </div>
                         <small>
@@ -1302,7 +1202,7 @@ class WPvivid_Custom_MU_Staging_List
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-themes-plugins-detail">Themes and Plugins</td>
                 <td class="column-description desc wpvivid-handle-themes-plugins-detail themes-plugins-desc">
-                    <?php _e($themes_plugins_descript); ?>
+                    <?php echo esc_html($themes_plugins_descript); ?>
                 </td>
                 <th class="wpvivid-handle-themes-plugins-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
@@ -1325,14 +1225,14 @@ class WPvivid_Custom_MU_Staging_List
                     <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-content-check" checked disabled/>
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-content-detail">wp-content</td>
-                <td class="column-description desc wpvivid-handle-content-detail content-desc"><?php _e($contents_descript); ?></td>
+                <td class="column-description desc wpvivid-handle-content-detail content-desc"><?php echo esc_html($contents_descript); ?></td>
                 <th class="wpvivid-handle-content-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
                         <summary title="Show detail" style="float: right; color: #a0a5aa;"></summary>
                     </details>
                 </th>
             </tr>
-            <tr class="wpvivid-custom-detail wpvivid-content-detail wpvivid-close" style="<?php esc_attr_e($content_text_style); ?> display: none;">
+            <tr class="wpvivid-custom-detail wpvivid-content-detail wpvivid-close" style="<?php echo esc_attr($content_text_style); ?> display: none;">
                 <th class="check-column"></th>
                 <td colspan="3" class="plugin-title column-primary">
                     <table class="wp-list-table widefat plugins" style="width:100%;">
@@ -1376,7 +1276,7 @@ class WPvivid_Custom_MU_Staging_List
                     </table>
                     <div style="margin-top: 10px;">
                         <div style="float: left; margin-right: 10px;">
-                            <input type="text" class="regular-text wpvivid-content-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php esc_attr_e($content_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
+                            <input type="text" class="regular-text wpvivid-content-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php echo esc_attr($content_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
                             <input type="button" class="wpvivid-content-extension-rule-btn" value="Save" />
                         </div>
                         <small>
@@ -1392,17 +1292,17 @@ class WPvivid_Custom_MU_Staging_List
             <tr style="cursor:pointer">
                 <th class="check-column" scope="row" style="padding-left: 6px;">
                     <label class="screen-reader-text" for=""></label>
-                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-additional-file-check" <?php esc_attr_e($additional_file_check); ?> />
+                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-additional-file-check" <?php echo esc_attr($additional_file_check); ?> />
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-additional-file-detail">Additional Files/Folder</td>
-                <td class="column-description desc wpvivid-handle-additional-file-detail additional-file-desc"><?php _e($additional_file_descript); ?></td>
+                <td class="column-description desc wpvivid-handle-additional-file-detail additional-file-desc"><?php echo esc_html($additional_file_descript); ?></td>
                 <th class="wpvivid-handle-additional-file-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
                         <summary title="Show detail" style="float: right; color: #a0a5aa;"></summary>
                     </details>
                 </th>
             </tr>
-            <tr class="wpvivid-custom-detail wpvivid-additional-file-detail wpvivid-close" style="<?php esc_attr_e($additional_file_text_style); ?> display: none;">
+            <tr class="wpvivid-custom-detail wpvivid-additional-file-detail wpvivid-close" style="<?php echo esc_attr($additional_file_text_style); ?> display: none;">
                 <th class="check-column"></th>
                 <td colspan="3" class="plugin-title column-primary">
                     <table class="wp-list-table widefat plugins" style="width:100%;">
@@ -1446,7 +1346,7 @@ class WPvivid_Custom_MU_Staging_List
                     </table>
                     <div style="margin-top: 10px;">
                         <div style="float: left; margin-right: 10px;">
-                            <input type="text" class="regular-text wpvivid-additional-file-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php esc_attr_e($additional_file_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
+                            <input type="text" class="regular-text wpvivid-additional-file-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php echo esc_attr($additional_file_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
                             <input type="button" class="wpvivid-additional-file-extension-rule-btn" value="Save" />
                         </div>
                         <small>
@@ -1501,37 +1401,37 @@ class WPvivid_Custom_MU_Staging_List
                 }
             }
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-database-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-database-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-themes-plugins-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-themes-plugins-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-themes-plugins-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-themes-plugins-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-uploads-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-uploads-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-uploads-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-uploads-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-content-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-content-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-content-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-content-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-additional-file-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-additional-file-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-additional-file-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-additional-file-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-custom-check', function() {
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-custom-check', function() {
                 if (jQuery(this).prop('checked')) {
                     if(!jQuery(this).hasClass('wpvivid-custom-core-check')) {
                         jQuery(jQuery(this).parents('tr').next().get(0)).css({'pointer-events': 'auto', 'opacity': '1'});
@@ -1539,7 +1439,7 @@ class WPvivid_Custom_MU_Staging_List
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-check').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-check').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
@@ -1556,33 +1456,33 @@ class WPvivid_Custom_MU_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-database-table-check', function() {
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-database-table-check', function() {
                 if(jQuery(this).prop('checked')){
                     if(jQuery(this).hasClass('wpvivid-database-base-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').prop('checked', true);
                     }
                     else if(jQuery(this).hasClass('wpvivid-database-woo-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').prop('checked', true);
                     }
                     else if(jQuery(this).hasClass('wpvivid-database-other-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
                     if (jQuery(this).hasClass('wpvivid-database-base-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').prop('checked', false);
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').prop('checked', false);
                         }
                         else{
                             jQuery(this).prop('checked', true);
@@ -1590,18 +1490,18 @@ class WPvivid_Custom_MU_Staging_List
                         }
                     }
                     else if (jQuery(this).hasClass('wpvivid-database-woo-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').prop('checked', false);
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').prop('checked', false);
                         }
                         else{
                             jQuery(this).prop('checked', true);
@@ -1609,18 +1509,18 @@ class WPvivid_Custom_MU_Staging_List
                         }
                     }
                     else if (jQuery(this).hasClass('wpvivid-database-other-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').prop('checked', false);
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').prop('checked', false);
                         }
                         else{
                             jQuery(this).prop('checked', true);
@@ -1630,27 +1530,27 @@ class WPvivid_Custom_MU_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=base_db][name=Database]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=base_db][name=Database]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-base-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-base-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[name=Database]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-base-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-base-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -1659,27 +1559,27 @@ class WPvivid_Custom_MU_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=woo_db][name=Database]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=woo_db][name=Database]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-woo-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-woo-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[name=Database]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-woo-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-woo-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -1688,27 +1588,27 @@ class WPvivid_Custom_MU_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=other_db][name=Database]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=other_db][name=Database]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-other-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-other-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[name=Database]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-other-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-other-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -1717,25 +1617,25 @@ class WPvivid_Custom_MU_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-themes-plugins-table-check', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-themes-plugins-table-check', function(){
                 if(jQuery(this).prop('checked')){
                     if(jQuery(this).hasClass('wpvivid-themes-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').prop('checked', true);
                     }
                     else if(jQuery(this).hasClass('wpvivid-plugins-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
                     if (jQuery(this).hasClass('wpvivid-themes-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').prop('checked', false);
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').prop('checked', false);
                         }
                         else{
                             jQuery(this).prop('checked', true);
@@ -1743,13 +1643,13 @@ class WPvivid_Custom_MU_Staging_List
                         }
                     }
                     else if (jQuery(this).hasClass('wpvivid-plugins-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                                 if(jQuery(this).val() !== 'wpvivid-backuprestore' && jQuery(this).val() !== 'wpvivid-backup-pro'){
                                     jQuery(this).prop('checked', false);
                                 }
@@ -1763,34 +1663,34 @@ class WPvivid_Custom_MU_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=themes][name=Themes]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=themes][name=Themes]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-themes-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-themes-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(!check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                     }
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-themes-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-themes-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -1799,34 +1699,34 @@ class WPvivid_Custom_MU_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=plugins][name=Plugins]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=plugins][name=Plugins]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-plugins-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-plugins-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(!check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                     }
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-plugins-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-plugins-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -1835,21 +1735,21 @@ class WPvivid_Custom_MU_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-uploads-extension-rule-btn', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-uploads-extension-rule-btn', function(){
                 var value = jQuery(this).prev().val();
                 if(value!=='') {
                     wpvivid_update_staging_exclude_extension('upload', value);
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-content-extension-rule-btn', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-content-extension-rule-btn', function(){
                 var value = jQuery(this).prev().val();
                 if(value!=='') {
                     wpvivid_update_staging_exclude_extension('content', value);
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-additional-file-extension-rule-btn', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-additional-file-extension-rule-btn', function(){
                 var value = jQuery(this).prev().val();
                 if(value!=='') {
                     wpvivid_update_staging_exclude_extension('additional_file', value);
@@ -1880,7 +1780,7 @@ class WPvivid_Custom_MU_Staging_List
                 });
             }
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-custom-li-close', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-custom-li-close', function(){
                 jQuery(this).parent().parent().remove();
             });
         </script>
@@ -1962,26 +1862,26 @@ class WPvivid_Custom_Staging_List
             }
         }
         ?>
-        <table class="wp-list-table widefat plugins wpvivid-custom-table" style="<?php esc_attr_e($border_css); ?>">
+        <table class="wp-list-table widefat plugins wpvivid-custom-table" style="<?php echo esc_attr($border_css); ?>">
             <tbody>
             <!-------- core -------->
             <tr>
                 <th class="check-column" scope="row" style="padding-left: 6px;">
                     <label class="screen-reader-text" for=""></label>
-                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-core-check" <?php esc_attr_e($core_check.$checkbox_disable); ?> />
+                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-core-check" <?php echo esc_attr($core_check.$checkbox_disable); ?> />
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-wordpress-core">Wordpress Core</td>
-                <td class="column-description desc core-desc"><?php _e($core_descript); ?></td>
+                <td class="column-description desc core-desc"><?php echo esc_html($core_descript); ?></td>
             </tr>
             <!-------- database -------->
             <tr style="cursor:pointer;">
                 <th class="check-column" scope="row" style="padding-left: 6px;">
                     <label class="screen-reader-text" for=""></label>
-                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-database-check" <?php esc_attr_e($database_check.$checkbox_disable); ?> />
+                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-database-check" <?php echo esc_attr($database_check.$checkbox_disable); ?> />
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-database-detail">Database</td>
                 <td class="column-description desc wpvivid-handle-database-detail database-desc">
-                    <?php _e($db_descript); ?>
+                    <?php echo esc_html($db_descript); ?>
                 </td>
                 <th class="wpvivid-handle-database-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
@@ -1989,7 +1889,7 @@ class WPvivid_Custom_Staging_List
                     </details>
                 </th>
             </tr>
-            <tr class="wpvivid-custom-detail wpvivid-database-detail wpvivid-close" style="<?php esc_attr_e($database_text_style); ?> display: none;">
+            <tr class="wpvivid-custom-detail wpvivid-database-detail wpvivid-close" style="<?php echo esc_attr($database_text_style); ?> display: none;">
                 <th class="check-column"></th>
                 <td colspan="3" class="plugin-title column-primary wpvivid-custom-database-info">
                     <div class="spinner" style="margin: 0 5px 10px 0; float: left;"></div>
@@ -2001,11 +1901,11 @@ class WPvivid_Custom_Staging_List
             <tr style="cursor:pointer">
                 <th class="check-column" scope="row" style="padding-left: 6px;">
                     <label class="screen-reader-text" for=""></label>
-                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-themes-plugins-check" <?php esc_attr_e($themes_plugins_check.$checkbox_disable); ?> />
+                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-themes-plugins-check" <?php echo esc_attr($themes_plugins_check.$checkbox_disable); ?> />
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-themes-plugins-detail">Themes and Plugins</td>
                 <td class="column-description desc wpvivid-handle-themes-plugins-detail themes-plugins-desc">
-                    <?php _e($themes_plugins_descript); ?>
+                    <?php echo esc_html($themes_plugins_descript); ?>
                 </td>
                 <th class="wpvivid-handle-themes-plugins-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
@@ -2013,7 +1913,7 @@ class WPvivid_Custom_Staging_List
                     </details>
                 </th>
             </tr>
-            <tr class="wpvivid-custom-detail wpvivid-themes-plugins-detail wpvivid-close" style="<?php esc_attr_e($themes_plugins_text_style); ?> display: none;">
+            <tr class="wpvivid-custom-detail wpvivid-themes-plugins-detail wpvivid-close" style="<?php echo esc_attr($themes_plugins_text_style); ?> display: none;">
                 <th class="check-column"></th>
                 <td colspan="3" class="plugin-title column-primary wpvivid-custom-themes-plugins-info">
                     <div class="spinner" style="margin: 0 5px 10px 0; float: left;"></div>
@@ -2025,17 +1925,17 @@ class WPvivid_Custom_Staging_List
             <tr style="cursor:pointer">
                 <th class="check-column" scope="row" style="padding-left: 6px;">
                     <label class="screen-reader-text" for=""></label>
-                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-uploads-check" <?php esc_attr_e($uploads_check.$checkbox_disable); ?> />
+                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-uploads-check" <?php echo esc_attr($uploads_check.$checkbox_disable); ?> />
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-uploads-detail">wp-content/uploads</td>
-                <td class="column-description desc wpvivid-handle-uploads-detail uploads-desc"><?php _e($uploads_descript); ?></td>
+                <td class="column-description desc wpvivid-handle-uploads-detail uploads-desc"><?php echo esc_html($uploads_descript); ?></td>
                 <th class="wpvivid-handle-uploads-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
                         <summary title="Show detail" style="float: right; color: #a0a5aa;"></summary>
                     </details>
                 </th>
             </tr>
-            <tr class="wpvivid-custom-detail wpvivid-uploads-detail wpvivid-close" style="<?php esc_attr_e($uploads_text_style); ?> display: none;">
+            <tr class="wpvivid-custom-detail wpvivid-uploads-detail wpvivid-close" style="<?php echo esc_attr($uploads_text_style); ?> display: none;">
                 <th class="check-column"></th>
                 <td colspan="3" class="plugin-title column-primary">
                     <table class="wp-list-table widefat plugins" style="width:100%;">
@@ -2057,8 +1957,9 @@ class WPvivid_Custom_Staging_List
                             <td class="wpvivid-custom-uploads-right">
                                 <div class="wpvivid-custom-uploads-table wpvivid-custom-exclude-uploads-list">
                                     <?php
-                                    if(!$this->is_staging_site){
-                                        echo $this->wpvivid_load_custom_upload();
+                                    if(!$this->is_staging_site)
+                                    {
+                                        $this->wpvivid_load_custom_upload();
                                     }
                                     ?>
                                 </div>
@@ -2086,7 +1987,7 @@ class WPvivid_Custom_Staging_List
                     </table>
                     <div style="margin-top: 10px;">
                         <div style="float: left; margin-right: 10px;">
-                            <input type="text" class="regular-text wpvivid-uploads-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php esc_attr_e($upload_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
+                            <input type="text" class="regular-text wpvivid-uploads-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php echo esc_attr($upload_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
                             <input type="button" class="wpvivid-uploads-extension-rule-btn" value="Save" />
                         </div>
                         <small>
@@ -2102,17 +2003,17 @@ class WPvivid_Custom_Staging_List
             <tr style="cursor:pointer">
                 <th class="check-column" scope="row" style="padding-left: 6px;">
                     <label class="screen-reader-text" for=""></label>
-                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-content-check" <?php esc_attr_e($content_check.$checkbox_disable); ?> />
+                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-content-check" <?php echo esc_attr($content_check.$checkbox_disable); ?> />
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-content-detail">wp-content</td>
-                <td class="column-description desc wpvivid-handle-content-detail content-desc"><?php _e($contents_descript); ?></td>
+                <td class="column-description desc wpvivid-handle-content-detail content-desc"><?php echo esc_html($contents_descript); ?></td>
                 <th class="wpvivid-handle-content-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
                         <summary title="Show detail" style="float: right; color: #a0a5aa;"></summary>
                     </details>
                 </th>
             </tr>
-            <tr class="wpvivid-custom-detail wpvivid-content-detail wpvivid-close" style="<?php esc_attr_e($content_text_style); ?> display: none;">
+            <tr class="wpvivid-custom-detail wpvivid-content-detail wpvivid-close" style="<?php echo esc_attr($content_text_style); ?> display: none;">
                 <th class="check-column"></th>
                 <td colspan="3" class="plugin-title column-primary">
                     <table class="wp-list-table widefat plugins" style="width:100%;">
@@ -2135,7 +2036,7 @@ class WPvivid_Custom_Staging_List
                                 <div class="wpvivid-custom-uploads-table wpvivid-custom-exclude-content-list">
                                     <?php
                                     if(!$this->is_staging_site){
-                                        echo $this->wpvivid_load_custom_content();
+                                        $this->wpvivid_load_custom_content();
                                     }
                                     ?>
                                 </div>
@@ -2161,7 +2062,7 @@ class WPvivid_Custom_Staging_List
                     </table>
                     <div style="margin-top: 10px;">
                         <div style="float: left; margin-right: 10px;">
-                            <input type="text" class="regular-text wpvivid-content-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php esc_attr_e($content_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
+                            <input type="text" class="regular-text wpvivid-content-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php echo esc_attr($content_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
                             <input type="button" class="wpvivid-content-extension-rule-btn" value="Save" />
                         </div>
                         <small>
@@ -2177,17 +2078,17 @@ class WPvivid_Custom_Staging_List
             <tr style="cursor:pointer">
                 <th class="check-column" scope="row" style="padding-left: 6px;">
                     <label class="screen-reader-text" for=""></label>
-                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-additional-file-check" <?php esc_attr_e($additional_file_check); ?> />
+                    <input type="checkbox" name="checked[]" class="wpvivid-custom-check wpvivid-custom-additional-file-check" <?php echo esc_attr($additional_file_check); ?> />
                 </th>
                 <td class="plugin-title column-primary wpvivid-backup-to-font wpvivid-handle-additional-file-detail">Additional Files/Folder</td>
-                <td class="column-description desc wpvivid-handle-additional-file-detail additional-file-desc"><?php _e($additional_file_descript); ?></td>
+                <td class="column-description desc wpvivid-handle-additional-file-detail additional-file-desc"><?php echo esc_html($additional_file_descript); ?></td>
                 <th class="wpvivid-handle-additional-file-detail">
                     <details class="primer" onclick="return false;" style="display: inline-block; width: 100%;">
                         <summary title="Show detail" style="float: right; color: #a0a5aa;"></summary>
                     </details>
                 </th>
             </tr>
-            <tr class="wpvivid-custom-detail wpvivid-additional-file-detail wpvivid-close" style="<?php esc_attr_e($additional_file_text_style); ?> display: none;">
+            <tr class="wpvivid-custom-detail wpvivid-additional-file-detail wpvivid-close" style="<?php echo esc_attr($additional_file_text_style); ?> display: none;">
                 <th class="check-column"></th>
                 <td colspan="3" class="plugin-title column-primary">
                     <table class="wp-list-table widefat plugins" style="width:100%;">
@@ -2210,7 +2111,7 @@ class WPvivid_Custom_Staging_List
                                 <div class="wpvivid-custom-uploads-table wpvivid-custom-include-additional-file-list">
                                     <?php
                                     if(!$this->is_staging_site){
-                                        echo $this->wpvivid_load_additional_file();
+                                        $this->wpvivid_load_additional_file();
                                     }
                                     ?>
                                 </div>
@@ -2236,7 +2137,7 @@ class WPvivid_Custom_Staging_List
                     </table>
                     <div style="margin-top: 10px;">
                         <div style="float: left; margin-right: 10px;">
-                            <input type="text" class="regular-text wpvivid-additional-file-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php esc_attr_e($additional_file_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
+                            <input type="text" class="regular-text wpvivid-additional-file-extension" placeholder="Exclude file types, for example: gif,jpg,webp" value="<?php echo esc_attr($additional_file_extension); ?>" onkeyup="value=value.replace(/[^a-zA-Z0-9\-_,]/g,'')"/>
                             <input type="button" class="wpvivid-additional-file-extension-rule-btn" value="Save" />
                         </div>
                         <small>
@@ -2256,18 +2157,18 @@ class WPvivid_Custom_Staging_List
     public function wpvivid_load_custom_upload(){
         $options = get_option('wpvivid_staging_history', array());
         $ret = '';
-        if(isset($options['uploads_list']) && !empty($options['uploads_list'])) {
+        if(isset($options['uploads_list']) && !empty($options['uploads_list']))
+        {
             foreach ($options['uploads_list'] as $index => $value) {
-                $ret .= '<ul style=\'margin: 0;\'>
+                echo '<ul style=\'margin: 0;\'>
                             <li>
-                                <div class="'.$value['type'].'"></div>
-                                <div class="wpvivid-custom-li-font">'.$value['name'].'</div>
+                                <div class="'.esc_attr($value['type']).'"></div>
+                                <div class="wpvivid-custom-li-font">'.esc_html($value['name']).'</div>
                                 <div class="wpvivid-custom-li-close" onclick="wpvivid_remove_custom_tree(this);" title="Remove" style="cursor: pointer;">X</div>
                             </li>
                          </ul>';
             }
         }
-        return $ret;
     }
 
     public function wpvivid_load_custom_content(){
@@ -2275,16 +2176,15 @@ class WPvivid_Custom_Staging_List
         $ret = '';
         if(isset($options['content_list']) && !empty($options['content_list'])) {
             foreach ($options['content_list'] as $index => $value) {
-                $ret .= '<ul style=\'margin: 0;\'>
+                echo '<ul style=\'margin: 0;\'>
                             <li>
-                                <div class="'.$value['type'].'"></div>
-                                <div class="wpvivid-custom-li-font">'.$value['name'].'</div>
+                                <div class="'.esc_attr($value['type']).'"></div>
+                                <div class="wpvivid-custom-li-font">'.esc_html($value['name']).'</div>
                                 <div class="wpvivid-custom-li-close" onclick="wpvivid_remove_custom_tree(this);" title="Remove" style="cursor: pointer;">X</div>
                             </li>
                          </ul>';
             }
         }
-        return $ret;
     }
 
     public function wpvivid_load_additional_file(){
@@ -2292,16 +2192,15 @@ class WPvivid_Custom_Staging_List
         $ret = '';
         if(isset($options['additional_file_list']) && !empty($options['additional_file_list'])) {
             foreach ($options['additional_file_list'] as $index => $value) {
-                $ret .= '<ul style=\'margin: 0;\'>
+                echo '<ul style=\'margin: 0;\'>
                             <li>
-                                <div class="'.$value['type'].'"></div>
-                                <div class="wpvivid-custom-li-font">'.$value['name'].'</div>
+                                <div class="'.esc_attr($value['type']).'"></div>
+                                <div class="wpvivid-custom-li-font">'.esc_html($value['name']).'</div>
                                 <div class="wpvivid-custom-li-close" onclick="wpvivid_remove_custom_tree(this);" title="Remove" style="cursor: pointer;">X</div>
                             </li>
                          </ul>';
             }
         }
-        return $ret;
     }
 
     public function load_js(){
@@ -2342,37 +2241,37 @@ class WPvivid_Custom_Staging_List
                 }
             }
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-database-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-database-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-themes-plugins-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-themes-plugins-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-themes-plugins-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-themes-plugins-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-uploads-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-uploads-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-uploads-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-uploads-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-content-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-content-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-content-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-content-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-handle-additional-file-detail', function() {
-                var obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-additional-file-detail');
-                var sub_obj = jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-detail');
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-handle-additional-file-detail', function() {
+                var obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-additional-file-detail');
+                var sub_obj = jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-detail');
                 wpvivid_handle_custom_open_close(obj, sub_obj);
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-custom-check', function() {
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-custom-check', function() {
                 if (jQuery(this).prop('checked')) {
                     if(!jQuery(this).hasClass('wpvivid-custom-core-check')) {
                         jQuery(jQuery(this).parents('tr').next().get(0)).css({'pointer-events': 'auto', 'opacity': '1'});
@@ -2380,7 +2279,7 @@ class WPvivid_Custom_Staging_List
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-custom-check').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-custom-check').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
@@ -2397,33 +2296,33 @@ class WPvivid_Custom_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-database-table-check', function() {
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-database-table-check', function() {
                 if(jQuery(this).prop('checked')){
                     if(jQuery(this).hasClass('wpvivid-database-base-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').prop('checked', true);
                     }
                     else if(jQuery(this).hasClass('wpvivid-database-woo-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').prop('checked', true);
                     }
                     else if(jQuery(this).hasClass('wpvivid-database-other-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
                     if (jQuery(this).hasClass('wpvivid-database-base-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').prop('checked', false);
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').prop('checked', false);
                         }
                         else{
                             jQuery(this).prop('checked', true);
@@ -2431,18 +2330,18 @@ class WPvivid_Custom_Staging_List
                         }
                     }
                     else if (jQuery(this).hasClass('wpvivid-database-woo-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').prop('checked', false);
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').prop('checked', false);
                         }
                         else{
                             jQuery(this).prop('checked', true);
@@ -2450,18 +2349,18 @@ class WPvivid_Custom_Staging_List
                         }
                     }
                     else if (jQuery(this).hasClass('wpvivid-database-other-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').prop('checked', false);
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').prop('checked', false);
                         }
                         else{
                             jQuery(this).prop('checked', true);
@@ -2471,27 +2370,27 @@ class WPvivid_Custom_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=base_db][name=Database]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=base_db][name=Database]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=base_db][name=Database]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-base-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-base-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[name=Database]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-base-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-base-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -2500,27 +2399,27 @@ class WPvivid_Custom_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=woo_db][name=Database]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=woo_db][name=Database]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=woo_db][name=Database]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-woo-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-woo-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[name=Database]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-woo-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-woo-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -2529,27 +2428,27 @@ class WPvivid_Custom_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=other_db][name=Database]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=other_db][name=Database]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=other_db][name=Database]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-other-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-other-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[name=Database]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[name=Database]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-database-other-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-database-other-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -2558,25 +2457,25 @@ class WPvivid_Custom_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-themes-plugins-table-check', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-themes-plugins-table-check', function(){
                 if(jQuery(this).prop('checked')){
                     if(jQuery(this).hasClass('wpvivid-themes-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').prop('checked', true);
                     }
                     else if(jQuery(this).hasClass('wpvivid-plugins-table-check')){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
                     if (jQuery(this).hasClass('wpvivid-themes-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').prop('checked', false);
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').prop('checked', false);
                         }
                         else{
                             jQuery(this).prop('checked', true);
@@ -2584,13 +2483,13 @@ class WPvivid_Custom_Staging_List
                         }
                     }
                     else if (jQuery(this).hasClass('wpvivid-plugins-table-check')) {
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                         if(check_status) {
-                            jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                            jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                                 if(jQuery(this).val() !== 'wpvivid-backuprestore' && jQuery(this).val() !== 'wpvivid-backup-pro'){
                                     jQuery(this).prop('checked', false);
                                 }
@@ -2604,34 +2503,34 @@ class WPvivid_Custom_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=themes][name=Themes]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=themes][name=Themes]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-themes-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-themes-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(!check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                     }
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-themes-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-themes-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -2640,34 +2539,34 @@ class WPvivid_Custom_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", 'input:checkbox[option=plugins][name=Plugins]', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", 'input:checkbox[option=plugins][name=Plugins]', function(){
                 if(jQuery(this).prop('checked')){
                     var all_check = true;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                         if(!jQuery(this).prop('checked')){
                             all_check = false;
                         }
                     });
                     if(all_check){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-plugins-table-check').prop('checked', true);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-plugins-table-check').prop('checked', true);
                     }
                 }
                 else{
                     var check_status = false;
-                    jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
+                    jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=plugins][name=Plugins]').each(function(){
                         if(jQuery(this).prop('checked')){
                             check_status = true;
                         }
                     });
                     if(!check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('input:checkbox[option=themes][name=Themes]').each(function(){
                             if(jQuery(this).prop('checked')){
                                 check_status = true;
                             }
                         });
                     }
                     if(check_status){
-                        jQuery('#<?php echo $this->parent_id; ?>').find('.wpvivid-plugins-table-check').prop('checked', false);
+                        jQuery('#<?php echo esc_attr($this->parent_id); ?>').find('.wpvivid-plugins-table-check').prop('checked', false);
                     }
                     else{
                         jQuery(this).prop('checked', true);
@@ -2676,21 +2575,21 @@ class WPvivid_Custom_Staging_List
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-uploads-extension-rule-btn', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-uploads-extension-rule-btn', function(){
                 var value = jQuery(this).prev().val();
                 if(value!=='') {
                     wpvivid_update_staging_exclude_extension('upload', value);
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-content-extension-rule-btn', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-content-extension-rule-btn', function(){
                 var value = jQuery(this).prev().val();
                 if(value!=='') {
                     wpvivid_update_staging_exclude_extension('content', value);
                 }
             });
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-additional-file-extension-rule-btn', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-additional-file-extension-rule-btn', function(){
                 var value = jQuery(this).prev().val();
                 if(value!=='') {
                     wpvivid_update_staging_exclude_extension('additional_file', value);
@@ -2721,7 +2620,7 @@ class WPvivid_Custom_Staging_List
                 });
             }
 
-            jQuery('#<?php echo $this->parent_id; ?>').on("click", '.wpvivid-custom-li-close', function(){
+            jQuery('#<?php echo esc_attr($this->parent_id); ?>').on("click", '.wpvivid-custom-li-close', function(){
                 jQuery(this).parent().parent().remove();
             });
         </script>

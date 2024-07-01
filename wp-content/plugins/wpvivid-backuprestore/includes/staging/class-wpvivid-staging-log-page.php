@@ -19,34 +19,6 @@ class WPvivid_Staging_Log_List_Free extends WP_List_Table
         );
     }
 
-    public function print_column_headers( $with_id = true )
-    {
-        list( $columns, $hidden, $sortable, $primary ) = $this->get_column_info();
-
-        foreach ( $columns as $column_key => $column_display_name ) {
-            $class = array( 'manage-column', "column-$column_key" );
-
-            if ( in_array( $column_key, $hidden ) ) {
-                $class[] = 'hidden';
-            }
-
-            if ( $column_key === $primary )
-            {
-                $class[] = 'column-primary';
-            }
-
-            $tag   = ( 'cb' === $column_key ) ? 'td' : 'th';
-            $scope = ( 'th' === $tag ) ? 'scope="col"' : '';
-            $id    = $with_id ? "id='$column_key'" : '';
-
-            if ( ! empty( $class ) ) {
-                $class = "class='" . join( ' ', $class ) . "'";
-            }
-
-            echo "<$tag $scope $id $class>$column_display_name</$tag>";
-        }
-    }
-
     public function get_columns()
     {
         $columns = array();
@@ -111,7 +83,7 @@ class WPvivid_Staging_Log_List_Free extends WP_List_Table
     {
         $offset=get_option('gmt_offset');
         $localtime = strtotime($log['time']) + $offset * 60 * 60;
-        echo '<td><label for="tablecell">'.date('F-d-Y H:i:s',$localtime).'</label></td>';
+        echo '<td><label for="tablecell">'.esc_html(gmdate('F-d-Y H:i:s',$localtime)).'</label></td>';
     }
 
     protected function column_wpvivid_log_type($log)
@@ -122,29 +94,27 @@ class WPvivid_Staging_Log_List_Free extends WP_List_Table
         }
         else
         {
-            echo '<span>'.$log['des'].'</span>';
+            echo '<span>'.esc_html($log['des']).'</span>';
         }
     }
 
     public function column_wpvivid_log_file_name( $log )
     {
-        echo '<span>'.$log['file_name'].'</span>';
+        echo '<span>'.esc_html($log['file_name']).'</span>';
     }
 
     public function column_wpvivid_log_action( $log )
     {
-        $html='<a class="open-log" log="'.$log['file_name'].'" style="cursor:pointer;">
+        echo '<a class="open-log" log="'.esc_attr($log['file_name']).'" style="cursor:pointer;">
                   <img src="'.esc_url(WPVIVID_PLUGIN_IMAGES_URL.'Log.png').'" style="vertical-align:middle;">Log
                </a>';
-        echo $html;
     }
 
     public function column_wpvivid_download( $log )
     {
-        $html='<a class="download-log" log="'.$log['file_name'].'" style="cursor:pointer;">
+        echo '<a class="download-log" log="'.esc_attr($log['file_name']).'" style="cursor:pointer;">
                     <img src="' . esc_url(WPVIVID_PLUGIN_IMAGES_URL . 'staging/download.png') . '" style="vertical-align:middle;" />Download
                </a>';
-        echo $html;
     }
 
     public function display_rows()
@@ -306,7 +276,7 @@ class WPvivid_Staging_Log_List_Free extends WP_List_Table
             $css_type = 'margin: 10px 0 0 0';
         }
         ?>
-        <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php esc_attr_e($css_type); ?>">
+        <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php echo esc_attr($css_type); ?>">
             <?php
             $this->extra_tablenav( $which );
             $this->pagination( $which );
@@ -340,7 +310,7 @@ class WPvivid_Staging_Log_Page_Free
 
     public function add_tab_log(){
         ?>
-        <a href="#" id="wpvivid_tab_staging_log" class="nav-tab log-nav-tab" onclick="switchlogTabs(event,'staging-logs-page')"><?php _e('Staging Logs', 'wpvivid-backuprestore'); ?></a>
+        <a href="#" id="wpvivid_tab_staging_log" class="nav-tab log-nav-tab" onclick="switchlogTabs(event,'staging-logs-page')"><?php esc_html_e('Staging Logs', 'wpvivid-backuprestore'); ?></a>
         <?php
     }
 
@@ -355,17 +325,15 @@ class WPvivid_Staging_Log_Page_Free
             <table class="wp-list-table widefat plugins">
                 <thead class="log-head">
                 <tr>
-                    <th class="row-title"><?php _e( 'Date', 'wpvivid-backuprestore' ); ?></th>
-                    <th><?php _e( 'Log Type', 'wpvivid-backuprestore' ); ?></th>
-                    <th><?php _e( 'Log File Name', 'wpvivid-backuprestore' ); ?></th>
-                    <th><?php _e( 'Action', 'wpvivid-backuprestore' ); ?></th>
+                    <th class="row-title"><?php esc_html_e( 'Date', 'wpvivid-backuprestore' ); ?></th>
+                    <th><?php esc_html_e( 'Log Type', 'wpvivid-backuprestore' ); ?></th>
+                    <th><?php esc_html_e( 'Log File Name', 'wpvivid-backuprestore' ); ?></th>
+                    <th><?php esc_html_e( 'Action', 'wpvivid-backuprestore' ); ?></th>
                 </tr>
                 </thead>
                 <tbody class="wpvivid-loglist" id="wpvivid_staging_loglist">
                 <?php
-                $ret['html']='';
-                $ret = apply_filters('wpvivid_get_staging_log_list', $ret);
-                echo $ret['html'];
+                $this->get_staging_log_list();
                 ?>
                 </tbody>
             </table>
@@ -377,7 +345,7 @@ class WPvivid_Staging_Log_Page_Free
                                     $current_page=1;
                                     $max_page=ceil(sizeof($loglist['log_list']['file'])/$max_log_diaplay);
                                     if($max_page == 0) $max_page = 1;
-                                    echo $current_page.' / '.$max_page;
+                                    echo esc_html($current_page.' / '.$max_page);
                                     ?>
                                 </span>
                 </div>
@@ -387,10 +355,10 @@ class WPvivid_Staging_Log_Page_Free
                         <?php
                         foreach ($display_log_count as $value){
                             if($value == $max_log_diaplay){
-                                echo '<option selected="selected" value="' . $value . '">' . $value . '</option>';
+                                echo '<option selected="selected" value="' . esc_attr($value) . '">' . esc_html($value) . '</option>';
                             }
                             else {
-                                echo '<option value="' . $value . '">' . $value . '</option>';
+                                echo '<option value="' . esc_attr($value) . '">' . esc_html($value) . '</option>';
                             }
                         }
                         ?>
@@ -401,7 +369,7 @@ class WPvivid_Staging_Log_Page_Free
         <script>
             var wpvivid_cur_staging_log_page = 1;
             var wpvivid_staging_log_count = '<?php
-                _e(sizeof($loglist['log_list']['file']), 'wpvivid-backuprestore');
+                echo esc_attr(sizeof($loglist['log_list']['file']));
                 ?>';
             jQuery('#wpvivid_staging_display_log_count').on("change", function(){
                 wpvivid_staging_display_log_page();
@@ -451,9 +419,8 @@ class WPvivid_Staging_Log_Page_Free
         <?php
     }
 
-    public function get_staging_log_list($ret)
+    public function get_staging_log_list()
     {
-        $html='';//$ret['html'];
         $loglist=$this->get_log_list('staging');
         $current_num=1;
         $max_log_diaplay=20;
@@ -474,19 +441,19 @@ class WPvivid_Staging_Log_Page_Free
                 else{
                     $offset=get_option('gmt_offset');
                     $localtime = strtotime($value['time'])/* + $offset * 60 * 60*/;
-                    $value['time'] = date('F-d-Y H:i:s',$localtime);
+                    $value['time'] = gmdate('F-d-Y H:i:s',$localtime);
                 }
                 if (empty($value['des'])) {
                     $value['des'] = 'N/A';
                 }
                 $value['path'] = str_replace('\\', '/', $value['path']);
-                $html .= '<tr style="'.esc_attr($log_tr_display, 'wpvivid-backuprestore').'">
-                <td class="row-title"><label for="tablecell">'.__($value['time'], 'wpvivid-backuprestore').'</label>
+                echo  '<tr style="'.esc_attr($log_tr_display).'">
+                <td class="row-title"><label for="tablecell">'.esc_html($value['time']).'</label>
                 </td>
-                <td>'.__($value['des'], 'wpvivid-backuprestore').'</td>
-                <td>'.__($value['file_name'], 'wpvivid-backuprestore').'</td>
+                <td>'.esc_html($value['des']).'</td>
+                <td>'.esc_html($value['file_name']).'</td>
                 <td>
-                    <a onclick="wpvivid_read_log(\''.'wpvivid_view_log'.'\', \''.$value['id'].'\', \''.'staging'.'\')" style="cursor:pointer;">
+                    <a onclick="wpvivid_read_log(\'wpvivid_view_log\', \''.esc_attr($value['id']).'\', \'staging\')" style="cursor:pointer;">
                     <img src="'.esc_url(WPVIVID_PLUGIN_URL.$pic_log).'" style="vertical-align:middle;">Log
                     </a>
                 </td>
@@ -495,9 +462,6 @@ class WPvivid_Staging_Log_Page_Free
                 $current_num++;
             }
         }
-        $ret['log_count']=$log_index;
-        $ret['html']=$html;
-        return $ret;
     }
 
     public function output_log()
@@ -517,7 +481,7 @@ class WPvivid_Staging_Log_Page_Free
     public function output_log_list($type,$slug,$id)
     {
         ?>
-        <div class="wpvivid-log-list" id="<?php echo $id?>">
+        <div class="wpvivid-log-list" id="<?php echo esc_attr($id)?>">
             <?php
             $loglist=$this->get_log_list($type);
             $table = new WPvivid_Staging_Log_List_Free();
@@ -527,44 +491,44 @@ class WPvivid_Staging_Log_Page_Free
             ?>
         </div>
         <script>
-            jQuery('#<?php echo $id?>').on("click",'.first-page',function()
+            jQuery('#<?php echo esc_attr($id)?>').on("click",'.first-page',function()
             {
-                wpvivid_log_change_page('first','<?php echo $type;?>','<?php echo $id;?>');
+                wpvivid_log_change_page('first','<?php echo esc_attr($type);?>','<?php echo esc_attr($id);?>');
             });
 
-            jQuery('#<?php echo $id?>').on("click",'.prev-page',function()
-            {
-                var page=parseInt(jQuery(this).attr('value'));
-                wpvivid_log_change_page(page-1,'<?php echo $type;?>','<?php echo $id?>');
-            });
-
-            jQuery('#<?php echo $id?>').on("click",'.next-page',function()
+            jQuery('#<?php echo esc_attr($id)?>').on("click",'.prev-page',function()
             {
                 var page=parseInt(jQuery(this).attr('value'));
-                wpvivid_log_change_page(page+1,'<?php echo $type;?>','<?php echo $id?>');
+                wpvivid_log_change_page(page-1,'<?php echo esc_attr($type);?>','<?php echo esc_attr($id)?>');
             });
 
-            jQuery('#<?php echo $id?>').on("click",'.last-page',function()
+            jQuery('#<?php echo esc_attr($id)?>').on("click",'.next-page',function()
             {
-                wpvivid_log_change_page('last','<?php echo $type;?>','<?php echo $id?>');
+                var page=parseInt(jQuery(this).attr('value'));
+                wpvivid_log_change_page(page+1,'<?php echo esc_attr($type);?>','<?php echo esc_attr($id)?>');
             });
 
-            jQuery('#<?php echo $id?>').on("keypress", '.current-page', function()
+            jQuery('#<?php echo esc_attr($id)?>').on("click",'.last-page',function()
+            {
+                wpvivid_log_change_page('last','<?php echo esc_attr($type);?>','<?php echo esc_attr($id)?>');
+            });
+
+            jQuery('#<?php echo esc_attr($id)?>').on("keypress", '.current-page', function()
             {
                 if(event.keyCode === 13)
                 {
                     var page = jQuery(this).val();
-                    wpvivid_log_change_page(page,'<?php echo $type;?>','<?php echo $id?>');
+                    wpvivid_log_change_page(page,'<?php echo esc_attr($type);?>','<?php echo esc_attr($id)?>');
                 }
             });
 
-            jQuery('#<?php echo $id?>').on("click",'.open-log',function()
+            jQuery('#<?php echo esc_attr($id)?>').on("click",'.open-log',function()
             {
                 var log=jQuery(this).attr("log");
-                wpvivid_open_log(log,'<?php echo $slug;?>');
+                wpvivid_open_log(log,'<?php echo esc_attr($slug);?>');
             });
 
-            jQuery('#<?php echo $id?>').on("click",'.download-log',function()
+            jQuery('#<?php echo esc_attr($id)?>').on("click",'.download-log',function()
             {
                 var log=jQuery(this).attr("log");
                 wpvivid_download_log(log);
@@ -835,11 +799,17 @@ class WPvivid_Staging_Log_Page_Free
     public function get_log_list_page()
     {
         global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
         try
         {
-            $page = $_POST['page'];
-            $type=$_POST['type'];
+            $page = sanitize_key($_POST['page']);
+            $type=sanitize_text_field($_POST['type']);
             $loglist = $this->get_log_list($type);
             $table = new WPvivid_Staging_Log_List_Free();
             $table->set_log_list($loglist['log_list']['file'], $page);
@@ -850,12 +820,12 @@ class WPvivid_Staging_Log_Page_Free
 
             $ret['result'] = 'success';
             $ret['rows'] = $rows;
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
         }
         catch (Exception $error) {
             $message = 'An exception has occurred. class: '.get_class($error).';msg: '.$error->getMessage().';code: '.$error->getCode().';line: '.$error->getLine().';in_file: '.$error->getFile().';';
             error_log($message);
-            echo json_encode(array('result'=>'failed','error'=>$message));
+            echo wp_json_encode(array('result'=>'failed','error'=>$message));
         }
         die();
     }
@@ -863,7 +833,13 @@ class WPvivid_Staging_Log_Page_Free
     public function view_log_ex()
     {
         global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
         try
         {
             if (isset($_POST['log']) && !empty($_POST['log']) && is_string($_POST['log']))
@@ -879,7 +855,7 @@ class WPvivid_Staging_Log_Page_Free
                 {
                     $json['result'] = 'failed';
                     $json['error'] = __('The log not found.', 'wpvivid-backuprestore');
-                    echo json_encode($json);
+                    echo wp_json_encode($json);
                     die();
                 }
 
@@ -889,7 +865,7 @@ class WPvivid_Staging_Log_Page_Free
                 {
                     $json['result'] = 'failed';
                     $json['error'] = __('The log not found.', 'wpvivid-backuprestore');
-                    echo json_encode($json);
+                    echo wp_json_encode($json);
                     die();
                 }
 
@@ -898,7 +874,7 @@ class WPvivid_Staging_Log_Page_Free
                 if (!$file) {
                     $json['result'] = 'failed';
                     $json['error'] = __('Unable to open the log file.', 'wpvivid-backuprestore');
-                    echo json_encode($json);
+                    echo wp_json_encode($json);
                     die();
                 }
 
@@ -910,18 +886,18 @@ class WPvivid_Staging_Log_Page_Free
 
                 $json['result'] = 'success';
                 $json['data'] = $buffer;
-                echo json_encode($json);
+                echo wp_json_encode($json);
             } else {
                 $json['result'] = 'failed';
                 $json['error'] = __('Reading the log failed. Please try again.', 'wpvivid-backuprestore');
-                echo json_encode($json);
+                echo wp_json_encode($json);
             }
         }
         catch (Exception $error)
         {
             $message = 'An exception has occurred. class: '.get_class($error).';msg: '.$error->getMessage().';code: '.$error->getCode().';line: '.$error->getLine().';in_file: '.$error->getFile().';';
             error_log($message);
-            echo json_encode(array('result'=>'failed','error'=>$message));
+            echo wp_json_encode(array('result'=>'failed','error'=>$message));
         }
         die();
     }
@@ -1067,7 +1043,13 @@ class WPvivid_Staging_Log_Page_Free
     public function download_log()
     {
         global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
 
         $admin_url=apply_filters('wpvividstg_get_admin_url', '') . 'admin.php?page=wpvividstg-log';
         try
@@ -1085,8 +1067,8 @@ class WPvivid_Staging_Log_Page_Free
                 {
                     $message= __('The log not found.', 'wpvivid-backuprestore');
                     echo sprintf(
-                        __( $message. '%1$stry again%2$s.', 'wpvivid-backuprestore' ),
-                        '<a href="' . $admin_url . '">',
+                        esc_html($message). '%1$stry again%2$s.',
+                        '<a href="' . esc_url($admin_url) . '">',
                         '</a>'
                     );
                     //echo __($message.' <a href="'.$admin_url.'">retry</a> again.');
@@ -1099,8 +1081,8 @@ class WPvivid_Staging_Log_Page_Free
                 {
                     $message= __('The log not found.', 'wpvivid-backuprestore');
                     echo sprintf(
-                        __( $message. '%1$stry again%2$s.', 'wpvivid-backuprestore' ),
-                        '<a href="' . $admin_url . '">',
+                        esc_html($message). '%1$stry again%2$s.',
+                        '<a href="' . esc_url($admin_url) . '">',
                         '</a>'
                     );
                     //echo __($message.' <a href="'.$admin_url.'">retry</a> again.');
@@ -1151,8 +1133,8 @@ class WPvivid_Staging_Log_Page_Free
                 else
                 {
                     echo sprintf(
-                        __( 'File not found. Please %1$stry again%2$s.', 'wpvivid-backuprestore' ),
-                        '<a href="' . $admin_url . '">',
+                        'File not found. Please %1$stry again%2$s.',
+                        '<a href="' . esc_url($admin_url) . '">',
                         '</a>'
                     );
                     //echo __(' file not found. please <a href="'.$admin_url.'">retry</a> again.');
@@ -1162,8 +1144,8 @@ class WPvivid_Staging_Log_Page_Free
             } else {
                 $message = __('Reading the log failed. Please try again.', 'wpvivid-backuprestore');
                 echo sprintf(
-                    __( $message. '%1$stry again%2$s.', 'wpvivid-backuprestore' ),
-                    '<a href="' . $admin_url . '">',
+                    esc_html($message). '%1$stry again%2$s.',
+                    '<a href="' . esc_url($admin_url) . '">',
                     '</a>'
                 );
                 //echo __($message.' <a href="'.$admin_url.'">retry</a> again.');
@@ -1175,13 +1157,13 @@ class WPvivid_Staging_Log_Page_Free
             $message = 'An exception has occurred. class: '.get_class($error).';msg: '.$error->getMessage().';code: '.$error->getCode().';line: '.$error->getLine().';in_file: '.$error->getFile().';';
             error_log($message);
             echo sprintf(
-                __( 'An exception has occurred. class: %1$s; msg: %2$s; code: %3$s; line: %4$s; in_file: %5$s. Please %6$stry again%7$s.', 'wpvivid-backuprestore' ),
-                get_class($error),
-                $error->getMessage(),
-                $error->getCode(),
-                $error->getLine(),
-                $error->getFile(),
-                '<a href="' . $admin_url . '">',
+                'An exception has occurred. class: %1$s; msg: %2$s; code: %3$s; line: %4$s; in_file: %5$s. Please %6$stry again%7$s.',
+                esc_html(get_class($error)),
+                esc_html($error->getMessage()),
+                esc_html($error->getCode()),
+                esc_html($error->getLine()),
+                esc_html($error->getFile()),
+                '<a href="' . esc_url($admin_url) . '">',
                 '</a>'
             );
             //echo __($message.' <a href="'.$admin_url.'">retry</a> again.');

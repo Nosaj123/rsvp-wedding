@@ -940,6 +940,9 @@ class Net_SSH2
      */
     var $auth = array();
 
+    var $decompress = false;
+    var $compress   = false;
+
     /**
      * Default Constructor.
      *
@@ -1214,8 +1217,8 @@ class Net_SSH2
                 $read = array($this->fsock);
                 $write = $except = null;
                 $start = strtok(microtime(), ' ') + strtok('');
-                $sec = floor($this->curTimeout);
-                $usec = 1000000 * ($this->curTimeout - $sec);
+                $sec = (int)floor($this->curTimeout);
+                $usec = (int)(1000000 * ($this->curTimeout - $sec));
                 // on windows this returns a "Warning: Invalid CRT parameters detected" error
                 // the !count() is done as a workaround for <https://bugs.php.net/42682>
                 if (!@stream_select($read, $write, $except, $sec, $usec) && !count($read)) {
@@ -3807,8 +3810,8 @@ class Net_SSH2
                     $write = $except = null;
 
                     $start = strtok(microtime(), ' ') + strtok(''); // http://php.net/microtime#61838
-                    $sec = floor($this->curTimeout);
-                    $usec = 1000000 * ($this->curTimeout - $sec);
+                    $sec = (int) floor($this->curTimeout);
+                    $usec = (int) (1000000 * ($this->curTimeout - $sec));
                     // on windows this returns a "Warning: Invalid CRT parameters detected" error
                     if (!@stream_select($read, $write, $except, $sec, $usec) && !count($read)) {
                         $this->is_timeout = true;

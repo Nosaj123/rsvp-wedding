@@ -236,10 +236,26 @@ function wpforms_sanitize_amount( $amount, $currency = '' ) { // phpcs:ignore Ge
 	if ( empty( $currency ) ) {
 		$currency = wpforms_get_currency();
 	}
+
+	$raw_amount    = $amount;
 	$currency      = strtoupper( $currency );
 	$currencies    = wpforms_get_currencies();
-	$thousands_sep = isset( $currencies[ $currency ]['thousands_separator'] ) ? $currencies[ $currency ]['thousands_separator'] : ',';
-	$decimal_sep   = isset( $currencies[ $currency ]['decimal_separator'] ) ? $currencies[ $currency ]['decimal_separator'] : '.';
+	$thousands_sep = $currencies[ $currency ]['thousands_separator'] ?? ',';
+	$decimal_sep   = $currencies[ $currency ]['decimal_separator'] ?? '.';
+
+	/**
+	 * Filter the raw price amount before sanitization.
+	 *
+	 * @since 1.8.9.4
+	 *
+	 * @param string $amount        Raw price amount.
+	 * @param string $currency      Currency ISO code (USD, EUR, etc).
+	 * @param string $thousands_sep Thousands separator.
+	 * @param string $decimal_sep   Decimal separator.
+	 *
+	 * @return string
+	 */
+	$amount = (string) apply_filters( 'wpforms_sanitize_amount_before', $amount, $currency, $thousands_sep, $decimal_sep );
 
 	// Sanitize the amount.
 	if ( $decimal_sep === ',' && strpos( $amount, $decimal_sep ) !== false ) {
@@ -261,23 +277,41 @@ function wpforms_sanitize_amount( $amount, $currency = '' ) { // phpcs:ignore Ge
 	 * . is decimal point.
 	 * - is minus sign.
 	 */
-	$amount = (string) preg_replace( '/[^E0-9.-]/', '', $amount );
+	$sanitized_amount = (string) preg_replace( '/[^E0-9.-]/', '', $amount );
 
 	/**
 	 * Set correct currency decimals.
 	 *
 	 * @since 1.6.6
 	 *
-	 * @param int     $decimals Default number of decimals.
-	 * @param string  $amount   Price amount.
+	 * @param int     $decimals         Default number of decimals.
+	 * @param string  $sanitized_amount Price amount.
 	 */
 	$decimals = (int) apply_filters(
 		'wpforms_sanitize_amount_decimals',
 		wpforms_get_currency_decimals( $currency ),
-		$amount
+		$sanitized_amount
 	);
 
-	return number_format( (float) $amount, $decimals, '.', '' );
+	/**
+	 * Filter the sanitized amount.
+	 *
+	 * @since 1.8.9.4
+	 *
+	 * @param string $sanitized_amount Sanitized price amount.
+	 * @param string $raw_amount       Raw price amount.
+	 * @param string $currency         Currency ISO code (USD, EUR, etc).
+	 * @param int    $decimals         Number of decimals.
+	 *
+	 * @return string
+	 */
+	return (string) apply_filters(
+		'wpforms_sanitize_amount',
+		number_format( (float) $sanitized_amount, $decimals, '.', '' ),
+		$raw_amount,
+		$currency,
+		$decimals
+	);
 }
 
 /**
@@ -348,7 +382,7 @@ function wpforms_format_amount( $amount, $symbol = false, $currency = '' ) { // 
 		if ( $currencies[ $currency ]['symbol_pos'] === 'right' ) {
 			$number .= $symbol_padding . $currencies[ $currency ]['symbol'];
 		} else {
-			$number = $currencies[ $currency ]['symbol'] . $symbol_padding . $number;
+			$number = $currencies[ $currency ]['symbol'] . $number;
 		}
 	}
 
@@ -537,6 +571,11 @@ function wpforms_get_total_payment( $fields ) {
 	foreach ( $fields as $field ) {
 		if ( ! empty( $field['amount'] ) ) {
 			$amount = wpforms_sanitize_amount( $field['amount'] );
+
+			if ( ! empty( $field['quantity'] ) ) {
+				$amount *= (int) $field['quantity'];
+			}
+
 			$total += $amount;
 		}
 	}
@@ -568,12 +607,71 @@ function wpforms_get_payment_items( $fields = [] ) {
 			empty( $field['type'] ) ||
 			empty( $field['amount'] ) ||
 			! in_array( $field['type'], $payment_fields, true ) ||
-			empty( wpforms_sanitize_amount( $field['amount'] ) )
+			empty( wpforms_sanitize_amount( $field['amount'] ) ) ||
+			( isset( $field['quantity'] ) && ! $field['quantity'] )
 		) {
-			// Remove all non-payment fields as well as payment fields with no amount.
+			// Remove all non-payment fields as well as payment fields with no amount or empty quantity.
 			unset( $fields[ $id ] );
 		}
 	}
 
 	return $fields;
+}
+
+/**
+ * Determine if field has quantity enabled.
+ *
+ * @since 1.8.7
+ *
+ * @param array $field     Field data.
+ * @param array $form_data Form data.
+ *
+ * @return bool
+ */
+function wpforms_payment_has_quantity( array $field, array $form_data ): bool {
+
+	if ( ! isset( $field['id'] ) ) {
+		return false;
+	}
+
+	if ( isset( $field['quantity'] ) ) {
+		return true;
+	}
+
+	$field_settings = $form_data['fields'][ $field['id'] ] ?? [];
+
+	if ( empty( $field_settings['enable_quantity'] ) ) {
+		return false;
+	}
+
+	// Quantity is available only for `single` format of the Single payment field.
+	if ( $field_settings['type'] === 'payment-single' && $field_settings['format'] !== 'single' ) {
+		return false;
+	}
+
+	// Otherwise return true.
+	// It covers the Dropdown Items field (and others where the quantity will be supported).
+	return true;
+}
+
+/**
+ * Formatted payment field value with quantity.
+ *
+ * @since 1.8.7
+ *
+ * @param array $field Field data.
+ *
+ * @return string
+ */
+function wpforms_payment_format_quantity( array $field ): string {
+
+	if ( empty( $field['value'] ) ) {
+		return '';
+	}
+
+	return sprintf( /* translators: %1$s - payment amount; %2$d - payment quantity. */
+		esc_html__( '%1$s &times; %2$d', 'wpforms-lite' ),
+		$field['value'],
+		$field['quantity'] ?? 1
+	);
 }

@@ -130,6 +130,20 @@ if ( ! class_exists( 'PPW_API' ) ) {
 
 			register_rest_route(
 				'wppp/v1',
+				'/master-passwords/all-expired-delete',
+				array(
+					'methods'             => 'POST',
+					'callback'            => array(
+						$this,
+						'all_expired_delete_master_passwords',
+					),
+					'permission_callback' => array( $this, 'can_access' ),
+				)
+			);
+
+
+			register_rest_route(
+				'wppp/v1',
 				'validate-password',
 				array(
 					'methods'             => 'POST',
@@ -350,6 +364,40 @@ if ( ! class_exists( 'PPW_API' ) ) {
 			);
 		}
 
+		/**
+		 * All Expired delete master password.
+		 *
+		 * @param object $request Request from body.
+		 *
+		 * @return WP_REST_Response The REST response.
+		 */
+		public function all_expired_delete_master_passwords( $request ) {
+			$ids        = $request->get_param( 'ids' );
+			$campaign_app_type='master_';
+			$ppwp_repo  = new PPW_Repository_Passwords();
+			$is_deleted = $ppwp_repo->delete_all_expired_password($ids, $campaign_app_type);
+
+			if ( $is_deleted ) {
+				return wp_send_json(
+					array(
+						'result'  => $is_deleted,
+						'success' => true,
+						'message' => 'Great! You’ve deleted all the expired passwords successfully.'
+					),
+					200
+				);
+			}
+
+			return wp_send_json(
+				array(
+					'result'  => array(),
+					'success' => false,
+					'message' => 'An error occurred, or no expired passwords were detected.'
+				),
+				400
+			);
+		}
+		
 		/**
 		 * Update password by id.
 		 *

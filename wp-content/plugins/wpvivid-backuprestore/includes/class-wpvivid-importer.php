@@ -41,44 +41,6 @@ class WPvivid_Export_List extends WP_List_Table
         $this->page_num=$page_num;
     }
 
-    public function print_column_headers( $with_id = true )
-    {
-        list($columns, $hidden, $sortable, $primary) = $this->get_column_info();
-
-        if (!empty($columns['cb'])) {
-            static $cb_counter = 1;
-            $columns['cb'] = '<label class="screen-reader-text" for="cb-select-all-' . $cb_counter . '">' . __('Select All', 'wpvivid-backuprestore') . '</label>'
-                . '<input id="cb-select-all-' . $cb_counter . '" type="checkbox"/>';
-            $cb_counter++;
-        }
-
-        foreach ($columns as $column_key => $column_display_name) {
-            $class = array('manage-column', "column-$column_key");
-
-            if (in_array($column_key, $hidden)) {
-                $class[] = 'hidden';
-            }
-
-            if ('cb' === $column_key) {
-                $class[] = 'check-column';
-            }
-
-            if ($column_key === $primary) {
-                $class[] = 'column-primary';
-            }
-
-            $tag = ('cb' === $column_key) ? 'td' : 'th';
-            $scope = ('th' === $tag) ? 'scope="col"' : '';
-            $id = $with_id ? "id='$column_key'" : '';
-
-            if (!empty($class)) {
-                $class = "class='" . join(' ', $class) . "'";
-            }
-
-            echo "<$tag $scope $id $class>$column_display_name</$tag>";
-        }
-    }
-
     public function get_columns()
     {
         $posts_columns = array();
@@ -143,7 +105,7 @@ class WPvivid_Export_List extends WP_List_Table
     public function column_cb( $item )
     {
         ?>
-        <input id="cb-select-<?php echo $item['id']; ?>" type="checkbox" name="export[]" value="<?php echo $item['id']; ?>"/>
+        <input id="cb-select-<?php echo esc_attr($item['id']); ?>" type="checkbox" name="export[]" value="<?php echo esc_attr($item['id']); ?>"/>
         <?php
     }
 
@@ -151,10 +113,10 @@ class WPvivid_Export_List extends WP_List_Table
     {
         echo '<td>                 
                     <div>
-                        '.$item['file_name'].'
+                        '.esc_html($item['file_name']).'
                     </div>
                      <div style="padding-bottom: 5px;">
-                        <div class="backuptime">Data Modified: ' . __(date('M-d-Y H:i', $item['time']), 'wpvivid-backuprestore') . '</div>              
+                        <div class="backuptime">Data Modified: ' .esc_html(gmdate('M-d-Y H:i', $item['time'])) . '</div>              
                     </div>
                 </td>';
     }
@@ -164,7 +126,9 @@ class WPvivid_Export_List extends WP_List_Table
         $export = $item['export_type'] === 'page' ? 'Page' : 'Post';
         echo '<td style="color: #000;">              
                     <div>
-                        <div style="float:left;padding:10px 10px 10px 0;">'.__('Type: ', 'wpvivid-backuprestore').$export.'</div>
+                        <div style="float:left;padding:10px 10px 10px 0;">';
+        esc_html_e('Type: ', 'wpvivid-backuprestore');
+        echo esc_html($export).'</div>
                     </div> 
               </td>';
     }
@@ -173,7 +137,7 @@ class WPvivid_Export_List extends WP_List_Table
     {
         echo '<td style="min-width:100px;">
                     <div style="float:left;padding:10px 10px 10px 0;">
-                        '.$item['posts_count'].'
+                        '.esc_html($item['posts_count']).'
                     </div>
                 </td>';
     }
@@ -182,7 +146,7 @@ class WPvivid_Export_List extends WP_List_Table
     {
         echo '<td style="min-width:100px;">
                     <div style="float:left;padding:10px 10px 10px 0;">
-                        '.$item['media_size'].'
+                        '.esc_html($item['media_size']).'
                     </div>
                 </td>';
     }
@@ -191,7 +155,8 @@ class WPvivid_Export_List extends WP_List_Table
     {
         echo '<td style="min-width:100px;">
                    <div class="export-list-import" style="cursor:pointer;padding:10px 0 10px 0;">
-                        <img src="' . esc_url(WPVIVID_PLUGIN_URL . '/admin/partials/images/Restore.png') . '" style="vertical-align:middle;" /><span>' . __('Import', 'wpvivid-backuprestore') . '</span>
+                        <img src="' . esc_url(WPVIVID_PLUGIN_URL . '/admin/partials/images/Restore.png') . '" style="vertical-align:middle;" /><span>' ; esc_html_e('Import', 'wpvivid-backuprestore') ;
+                        echo '</span>
                    </div>                
                </td>';
     }
@@ -243,7 +208,7 @@ class WPvivid_Export_List extends WP_List_Table
     public function single_row($item)
     {
         ?>
-        <tr id="<?php echo $item['id'] ?>" class="wpvivid-export-list-item">
+        <tr id="<?php echo esc_attr($item['id']) ?>" class="wpvivid-export-list-item">
             <?php $this->single_row_columns( $item ); ?>
         </tr>
         <?php
@@ -495,7 +460,7 @@ class WPvivid_import_data
         if(filesize($this->import_log_file)>4*1024*1024)
         {
             $this->import_log->CloseFile();
-            unlink($this->import_log_file);
+            wp_delete_file($this->import_log_file);
             $this->import_log=null;
             $this->import_log=new WPvivid_Log();
             $this->import_log->OpenLogFile($this->import_log_file,'has_folder');
@@ -625,7 +590,7 @@ class WPvivid_media_importer
                 return $ret;
             }
             $this->import_log->wpvivid_write_import_log('Import task is completed, file name: '.$file_path, 'notice');
-            @unlink($file_path);
+            @wp_delete_file($file_path);
         }
 
         $this->replace_domain();
@@ -639,6 +604,8 @@ class WPvivid_media_importer
 
     public function get_file_info($file_name)
     {
+        if(!class_exists('WPvivid_ZipClass'))
+            include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-zipclass.php';
         $zip=new WPvivid_ZipClass();
         $ret=$zip->get_json_data($file_name, 'export');
         if($ret['result'] === WPVIVID_SUCCESS)
@@ -1671,7 +1638,7 @@ class WPvivid_media_importer
 
         if(!file_exists($new_file))
         {
-            return new WP_Error( 'import_file_error', __('File not exist, file:'.$new_file, 'wpvivid-backuprestore') );
+            return new WP_Error( 'import_file_error', 'File not exist, file:'.$new_file );
         }
 
         $wp_filetype = wp_check_filetype( $file_name );
@@ -1748,7 +1715,7 @@ class WPvivid_media_importer
 
         if ( is_wp_error( $post_id ) )
         {
-            echo 'error file:'.$upload['file'];
+            echo 'error file:'.esc_html($upload['file']);
         }
 
         //$metadata=wp_generate_attachment_metadata( $post_id, $upload['file'] );
@@ -1784,7 +1751,7 @@ class WPvivid_media_importer
 
         if(!file_exists($new_file))
         {
-            return new WP_Error( 'import_file_error', __('File not exist, file:'.$new_file, 'wpvivid-backuprestore') );
+            return new WP_Error( 'import_file_error', 'File not exist, file:'.$new_file );
         }
 
         return apply_filters(

@@ -368,7 +368,8 @@ class Password_Protect_Page {
 		$this->loader->add_action( 'ppwp_render_sitewide_countdown', $plugin_admin, 'ppw_sitewide_countdown' );
 		$this->loader->add_action( 'ppwp_sitewide_hide_password_form', $plugin_admin, 'ppw_sitewide_hide_password_form' );
 		$this->loader->add_action( 'ppwp_countdown_timer_styles', $plugin_admin, 'register_countdown_timer_style' );
-
+		
+		$this->loader->add_filter( 'rest_authentication_errors', $plugin_admin, 'ppwp_sitewide_authentication_errors', 99, 1 );
 		$this->loader->add_filter( 'plugin_action_links_' . PPW_PLUGIN_BASE_NAME, $plugin_admin, 'handle_plugin_links', 30 );
 		$this->loader->add_filter( 'ppwp_customizer_custom_fields', $plugin_admin, 'ppw_customizer_custom_fields', 11, 2 );
 

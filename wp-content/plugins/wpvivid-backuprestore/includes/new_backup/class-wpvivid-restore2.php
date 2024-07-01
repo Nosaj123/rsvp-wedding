@@ -35,8 +35,13 @@ class WPvivid_Restore_2
 
     public function init_restore_task()
     {
-        global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
 
         if(!isset($_POST['backup_id'])||empty($_POST['backup_id'])||!is_string($_POST['backup_id']))
         {
@@ -50,7 +55,7 @@ class WPvivid_Restore_2
         {
             foreach ($_POST['restore_options'] as $key=>$option)
             {
-                $restore_options[$key]=$option;
+                $restore_options[$key]=sanitize_text_field($option);
             }
         }
 
@@ -73,10 +78,10 @@ class WPvivid_Restore_2
         if(!file_exists(WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php'))
         {
             if(file_exists(WPMU_PLUGIN_DIR))
-                copy(WPVIVID_PLUGIN_DIR . 'includes/mu-plugins/a-wpvivid-restore-mu-plugin-check.php',WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php');
+                copy(WPVIVID_PLUGIN_DIR . '/includes/mu-plugins/a-wpvivid-restore-mu-plugin-check.php',WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php');
         }
 
-        echo json_encode($ret);
+        echo wp_json_encode($ret);
         die();
     }
 
@@ -182,12 +187,14 @@ class WPvivid_Restore_2
                 $task['exec_sql']['init_sql_finished']=0;
                 $task['exec_sql']['create_snapshot_finished']=0;
                 $task['exec_sql']['exec_sql_finished']=0;
+                $task['exec_sql']['replace_rows_finished']=0;
 
                 $task['exec_sql']['current_table']='';
                 $task['exec_sql']['current_old_table']='';
-                $task['exec_sql']['current_replace_table_finish']=false;
-                $task['exec_sql']['current_need_replace_table']=false;
-                $task['exec_sql']['current_replace_row']=0;
+                $task['exec_sql']['replace_tables']=array();
+                //$task['exec_sql']['current_replace_table_finish']=false;
+                //$task['exec_sql']['current_need_replace_table']=false;
+                //$task['exec_sql']['current_replace_row']=0;
 
                 $task['exec_sql']['last_action']='waiting...';
                 $task['exec_sql']['last_query']='';
@@ -371,7 +378,7 @@ class WPvivid_Restore_2
         do
         {
             $count++;
-            $uid = sprintf('%06x', mt_rand(0, 0xFFFFFF));
+            $uid = sprintf('%06x', wp_rand(0, 0xFFFFFF));
 
             $verify_db = $wpdb->get_col($wpdb->prepare('SHOW TABLES LIKE %s', array('%' . $uid . '%')));
         } while (!empty($verify_db) && $count < 10);
@@ -568,6 +575,11 @@ class WPvivid_Restore_2
     public function do_restore()
     {
         check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        if(!$check)
+        {
+            die();
+        }
         ini_set('display_errors', false);
         error_reporting(-1);
         register_shutdown_function(array($this,'deal_restore_shutdown_error'));
@@ -578,7 +590,7 @@ class WPvivid_Restore_2
             {
                 $ret['result']='failed';
                 $ret['error']='restore task has error';
-                echo json_encode($ret);
+                echo wp_json_encode($ret);
                 $this->end_shutdown_function=true;
                 die();
             }
@@ -591,7 +603,7 @@ class WPvivid_Restore_2
             $ret=$this->_do_restore();
 
             $this->_disable_maintenance_mode();
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
         }
         catch (Exception $error)
         {
@@ -606,7 +618,7 @@ class WPvivid_Restore_2
             $restore_task['status']='error';
             $restore_task['error']=$ret['error'];
             update_option('wpvivid_restore_task',$restore_task);
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
         }
 
         die();
@@ -839,7 +851,7 @@ class WPvivid_Restore_2
     public function flush()
     {
         $ret['result'] = 'success';
-        $txt = json_encode($ret);
+        $txt = wp_json_encode($ret);
 
         if(!headers_sent()){
             header('Content-Length: '.( ( ! empty( $txt ) ) ? strlen( $txt ) : '0' ));
@@ -848,7 +860,7 @@ class WPvivid_Restore_2
         }
         if (session_id())
             session_write_close();
-        echo $txt;
+        echo wp_json_encode($ret);
 
         if(function_exists('fastcgi_finish_request'))
         {
@@ -865,7 +877,11 @@ class WPvivid_Restore_2
     public function get_restore_progress()
     {
         check_ajax_referer( 'wpvivid_ajax', 'nonce' );
-
+        $check=current_user_can('manage_options');
+        if(!$check)
+        {
+            die();
+        }
         $restore_task=get_option('wpvivid_restore_task',array());
 
         if($this->check_restore_task()==false)
@@ -873,7 +889,7 @@ class WPvivid_Restore_2
             $ret['result']='failed';
             $ret['error']='restore task has error';
             $ret['test']=$restore_task;
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
         }
 
@@ -882,7 +898,7 @@ class WPvivid_Restore_2
         {
             $ret['result']='failed';
             $ret['error']=$restore_task['error'];
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
         }
 
@@ -1047,17 +1063,54 @@ class WPvivid_Restore_2
                                     }
                                     else
                                     {
-                                        $file_size=0;
-                                        $read_size=0;
-                                        foreach ($sub_task['exec_sql']['sql_files'] as $sql_file)
+                                        if($restore_task['is_migrate'])
                                         {
-                                            $file_size+=$sql_file['sql_file_size'];
-                                            $read_size+=$sql_file['sql_offset'];
-                                        }
+                                            $file_size=0;
+                                            $read_size=0;
 
-                                        $progress=intval(($read_size/ $file_size)*100);
-                                        $sub_progress+=$progress;
-                                        $sub_task_progress= $sub_task['exec_sql']['last_action'].' - '.$progress.'%';
+                                            foreach ($sub_task['exec_sql']['sql_files'] as $sql_file)
+                                            {
+                                                $file_size+=$sql_file['sql_file_size'];
+                                                $read_size+=$sql_file['sql_offset'];
+                                            }
+
+                                            $progress1=intval(($read_size/ $file_size)*50);
+                                            $progress2=0;
+                                            if(!empty($sub_task['exec_sql']['replace_tables']))
+                                            {
+                                                $need_replace_table = sizeof($sub_task['exec_sql']['replace_tables']);
+                                                $replaced_tables=0;
+                                                foreach ($sub_task['exec_sql']['replace_tables'] as $replace_table)
+                                                {
+                                                    if ($replace_table['finished'] == 1)
+                                                    {
+                                                        $replaced_tables++;
+                                                    }
+                                                }
+                                                $progress2=intval(($replaced_tables/ $need_replace_table)*50);
+                                            }
+
+                                            $progress=$progress1+$progress2;
+
+                                            $sub_progress+=$progress;
+                                            $sub_task_progress= $sub_task['exec_sql']['last_action'].' - '.$progress.'%';
+                                        }
+                                        else
+                                        {
+                                            $file_size=0;
+                                            $read_size=0;
+
+                                            foreach ($sub_task['exec_sql']['sql_files'] as $sql_file)
+                                            {
+                                                $file_size+=$sql_file['sql_file_size'];
+                                                $read_size+=$sql_file['sql_offset'];
+                                            }
+
+                                            $progress=intval(($read_size/ $file_size)*100);
+
+                                            $sub_progress+=$progress;
+                                            $sub_task_progress= $sub_task['exec_sql']['last_action'].' - '.$progress.'%';
+                                        }
                                     }
                                 }
                                 else
@@ -1125,7 +1178,7 @@ class WPvivid_Restore_2
 
                     $ret['main_task_progress_total']=$total;
                     $ret['main_task_progress_finished']=$finished;
-                    $ret['main_progress']='<span class="wpvivid-span-processed-progress wpvivid-span-processed-restore-percent-progress" style="width: '.$main_progress.'%;">'.$main_progress.'% completed</span>';
+                    $ret['main_progress']='<span class="action-progress-bar-percent wpvivid-span-processed-restore-percent-progress" style="width: '.$main_progress.'%; display:block; height:1.5em; border-radius:0; padding-left:0.5em;">'.$main_progress.'% completed</span>';
 
                     $buffer = '';
                     if(file_exists($restore_task['log']))
@@ -1155,7 +1208,7 @@ class WPvivid_Restore_2
             }
         }
 
-        echo json_encode($ret);
+        echo wp_json_encode($ret);
         die();
     }
 
@@ -1183,7 +1236,11 @@ class WPvivid_Restore_2
     public function finish_restore()
     {
         check_ajax_referer( 'wpvivid_ajax', 'nonce' );
-
+        $check=current_user_can('manage_options');
+        if(!$check)
+        {
+            die();
+        }
         register_shutdown_function(array($this,'deal_restore_finish_shutdown_error'));
         ini_set('display_errors', 0);
 
@@ -1194,7 +1251,7 @@ class WPvivid_Restore_2
 
         if(file_exists(WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php'))
         {
-            @unlink(WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php');
+            @wp_delete_file(WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php');
         }
 
         $plugins= get_option( 'wpvivid_save_active_plugins', array() );
@@ -1309,14 +1366,14 @@ class WPvivid_Restore_2
                     $files=$backup_item->get_files(true);
                     foreach ($files as $file)
                     {
-                        @unlink($file);
+                        @wp_delete_file($file);
                     }
                 }
             }
         }
 
         $siteurl = get_option( 'siteurl' );
-        echo '<p style="font-size:1.5em;"><span><a href="'.$siteurl.'" target="_blank">Visit Site</a></span></p>';
+        echo '<p style="font-size:1.5em;"><span><a href="'.esc_url($siteurl).'" target="_blank">Visit Site</a></span></p>';
 
         delete_option('wpvivid_restore_task');
 
@@ -1391,7 +1448,7 @@ class WPvivid_Restore_2
                     //$this->log->WriteLog('clean file:'.$path,'notice');
                     if(file_exists($path))
                     {
-                        @unlink($path);
+                        @wp_delete_file($path);
                     }
                 }
             }
@@ -1400,6 +1457,12 @@ class WPvivid_Restore_2
 
     public function restore_failed()
     {
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        if(!$check)
+        {
+            die();
+        }
         register_shutdown_function(array($this,'deal_restore_finish_shutdown_error'));
 
         //echo '<p style="font-size:1.5em;"><span>Please adjust the advanced settings before restoring and retry.</span></p>';
@@ -1408,7 +1471,7 @@ class WPvivid_Restore_2
         $this->write_litespeed_rule(false);
         if(file_exists(WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php'))
         {
-            @unlink(WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php');
+            @wp_delete_file(WPMU_PLUGIN_DIR.'/a-wpvivid-restore-mu-plugin-check.php');
         }
         $plugins= get_option( 'wpvivid_save_active_plugins', array() );
 
@@ -1424,14 +1487,14 @@ class WPvivid_Restore_2
         echo 'Restore failed. ';
         if($restore_task['status']=='error')
         {
-            echo 'Error:'.$restore_task['error'].' ';
+            echo 'Error:'.esc_html($restore_task['error']).' ';
             if(isset($restore_task['error_memory_limit']))
             {
                 echo 'Memory exhausted during restoring..';
             }
             else if(isset($restore_task['error_mu_require_file']))
             {
-                echo 'Restore must-use plugin '.$restore_task['error_mu_require_file'].' error.Plugin require file not found..';
+                echo 'Restore must-use plugin '.esc_html($restore_task['error_mu_require_file']).' error.Plugin require file not found..';
             }
         }
         else
@@ -1484,8 +1547,7 @@ class WPvivid_Restore_2
             if ($error !== false)
             {
                 $message = 'type: '. $error['type'] . ', ' . $error['message'];
-                $error_msg='<p style="font-size:1.5em;">Error Info:'.$message.'</p>';
-                echo $error_msg;
+                echo '<p style="font-size:1.5em;">Error Info:'.esc_html($message).'</p>';;
             }
         }
 
@@ -1570,7 +1632,7 @@ class WPvivid_Restore_2
         $path =  $wp_upload_dir['basedir'] . '/elementor/css/' . '*';
 
         foreach ( glob( $path ) as $file_path ) {
-            unlink( $file_path );
+            wp_delete_file( $file_path );
         }
         delete_post_meta_by_key( '_elementor_css' );
         delete_option( '_elementor_global_css' );
@@ -1747,7 +1809,7 @@ class WPvivid_Restore_2
 
             if ( is_file( $file ) )
             {
-                @unlink($file);
+                @wp_delete_file($file);
             }
         }
     }

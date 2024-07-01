@@ -146,7 +146,9 @@ class WPForms_Settings {
 	private function is_downgraded_version(): bool {
 
 		// Get all installed versions.
-		$installed_versions = wpforms()->is_pro() ? (array) get_option( Migrations::MIGRATED_OPTION_NAME, [] ) : (array) get_option( LiteMigration::MIGRATED_OPTION_NAME, [] );
+		$installed_versions = wpforms()->is_pro() ?
+			(array) get_option( Migrations::MIGRATED_OPTION_NAME, [] ) :
+			(array) get_option( LiteMigration::MIGRATED_OPTION_NAME, [] );
 
 		// Get the most recent installed version.
 		$db_latest = array_keys( $installed_versions )[ count( $installed_versions ) - 1 ];
@@ -530,6 +532,18 @@ class WPForms_Settings {
 						'{limit}',
 						'{remaining}'
 					),
+				],
+				'validation-requiredpayment'      => [
+					'id'      => 'validation-requiredpayment',
+					'name'    => esc_html__( 'Payment Required', 'wpforms-lite' ),
+					'type'    => 'text',
+					'default' => esc_html__( 'Payment is required.', 'wpforms-lite' ),
+				],
+				'validation-creditcard'           => [
+					'id'      => 'validation-creditcard',
+					'name'    => esc_html__( 'Credit Card', 'wpforms-lite' ),
+					'type'    => 'text',
+					'default' => esc_html__( 'Please enter a valid credit card number.', 'wpforms-lite' ),
 				],
 			],
 			// Provider integrations settings tab.

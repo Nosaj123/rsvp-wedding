@@ -1,14 +1,14 @@
 === Add to Calendar Button ===
 Contributors: add2cal, jekuer
-Tags: calendar, button, event, widget, rsvp, appointment, link, ical, ics, share, date, component
-Stable tag: 2.0.3
+Tags: calendar, button, event, widget, rsvp
+Stable tag: 2.3.7
 Requires at least: 5.7
 Requires PHP: 7.4
-Tested up to: 6.4
+Tested up to: 6.5
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Create beautiful buttons, where people can add events and appointments to their calendars. Fast and hustle-free. Highly customizable. As shortcode or via a convenient block.
+Create beautiful buttons, where people can add events to their calendars. Highly customizable. As shortcode or via a convenient block.
 
 == Description ==
 
@@ -34,7 +34,7 @@ You can either use the shortcode [add-to-calendar-button] or the Gutenberg Block
 
 In the no-PRO case, you simply place the necessary attributes directly in the shortcode, or at the Gutenberg Block settings.
 
-(Mind that you cannot use '[' and ']' characters, when going for the shortcode option! For content formatting, you can use {'{'}*{'}'} instead of [*] there.)
+(Mind that you cannot use '[' and ']' characters, when going for the shortcode option! For content formatting, you can use {'{'}xxx{'}'} instead of [xxx] there.)
 
 = ✨ SUPPORTED CALENDARS =
 
@@ -108,6 +108,14 @@ First of all, there are a lot of easy to access options for the most common case
 
 In case you want to go even further with customizing the look of the Add to Calendar Button, you have multiple expert options. They are described in detail at the [advanced usage section of the documentation](https://add-to-calendar-button.com/advanced-use).
 
+= Can I use a Shortcode inside the Shortcode? =
+
+Yes, you can.
+
+Mind that you can only replace the values of the attributes with a shortcode, not the attribute names.
+
+You also need to use {sc_start}xxx{sc_end} instead of [xxx] as scheme!
+
 = Does it also come with RSVP forms? =
 
 If you are signed up for the PRO version, you can transform any button into an RSVP form with one click from the Add to Calendar PRO app.
@@ -129,6 +137,25 @@ If the problem is not related to the WordPress integration, but rather the butto
 2. Add to Calendar Buttons can take all kinds of styles.
 
 == Changelog ==
+= 2.3 =
+* supporting shortcode inside the shortcode for attribute values
+* preparing for WordPress 6.5
+* dropping default image for schema.org
+* add default eventStatus to rich data
+* all kinds of css fixes
+
+= 2.2 =
+* new option useUserTZ
+* adding css ::part support
+* adding support for formatting inside a url at description
+
+= 2.1 =
+* ⚠️ Attention: dropdown now available for date style button (also acting as new default)
+* ⚠️ Attention: fixing schema.org default image (set option to "[]" to disable)
+* dropping iOS non-Safari workaround for givenIcsFile
+* style optimization
+* new css variables, like customizable font-weight
+
 = 2.0 =
 * updating add-to-calendar-button script to v2.5.4
 * ✨ introducing Add to Calendar PRO

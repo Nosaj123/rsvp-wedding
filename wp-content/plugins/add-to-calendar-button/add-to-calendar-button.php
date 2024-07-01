@@ -3,7 +3,7 @@
  * Plugin Name:       Add to Calendar Button
  * Plugin URI:        https://add-to-calendar-button.com
  * Description:       Create RSVP forms and beautiful buttons, where people can add events to their calendars.
- * Version:           2.0.3
+ * Version:           2.3.7
  * Requires at least: 5.7
  * Requires PHP:      7.4
  * Author:            Jens Kuerschner
@@ -36,12 +36,13 @@ others as a managed service.
 defined('ABSPATH') or die("No script kiddies please!");
 
 // DEFINE CONSTANTS and rather global variables
-define( 'ATCB_SCRIPT_VERSION', '2.5.7' );
-define( 'ATCB_PLUGIN_VERSION', '2.0.3' );
+define( 'ATCB_SCRIPT_VERSION', '2.6.18' );
+define( 'ATCB_PLUGIN_VERSION', '2.3.7' );
 $allowedAttributes = [ // we need to use lower case attributes here, since the shortcode makes all attrs lower case
   'prokey',
   'instance',
   'debug',
+  'prooverride',
   'cspnonce',
   'identifier',
   'name',
@@ -52,6 +53,7 @@ $allowedAttributes = [ // we need to use lower case attributes here, since the s
   'enddate',
   'endtime',
   'timezone',
+  'useusertz',
   'location',
   'status',
   'uid',
@@ -112,6 +114,7 @@ $allowedAttributes = [ // we need to use lower case attributes here, since the s
   'forceoverlay',
   'rsvp',
   'ty',
+  'customVar',
   'dev',
 ];
 
@@ -187,7 +190,12 @@ function atcb_shortcode_func( $atts ) {
       if ( !in_array(strtolower($key), $allowedAttributes, true) ) {
         continue;
       }
-      $output .= ' ' . esc_attr( $key ) . '="' . esc_attr( $value ) . '"';
+      $valueContent = esc_attr($value);
+      // replace "{{sc_start}}", "{{sc_end}}" with "[" and "]" to allow for nested shortcodes
+      $valueContent = str_replace('{sc_start}', '[', $valueContent);
+      $valueContent = str_replace('{sc_end}', ']', $valueContent);
+      $valueStr = do_shortcode($valueContent);
+      $output .= ' ' . esc_attr( $key ) . '="' . esc_attr( $valueStr ) . '"';
     }
   }
   $output .= '></add-to-calendar-button>';
@@ -228,12 +236,17 @@ function atcb_register_block() {
     ]
   );
   // transmit further settings
+  $tz = wp_timezone_string();
+  // if tz starts with +,-, or 0, we set it to "America/New_York" as default
+  if ( preg_match('/^[+-0]/', $tz) ) {
+    $tz = 'America/New_York';
+  }
   wp_localize_script(
     'atcb-block',
     'atcbSettings',
     [
       'allowedAttributes' => $allowedAttributes,
-      'defaultTimeZone' => wp_timezone_string(),
+      'defaultTimeZone' => $tz,
       'defaultTitle' => __("My Event Title", 'add-to-calendar-button'),
     ]
   );

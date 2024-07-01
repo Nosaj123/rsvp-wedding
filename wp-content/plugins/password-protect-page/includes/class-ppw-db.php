@@ -445,6 +445,14 @@ if ( ! class_exists( 'PPW_Repository_Passwords' ) ) {
 			return $this->wpdb->query( $query_string ); // phpcs:ignore -- we already prepared above
 		}
 
+		/**
+         * Delete all expired master password
+         */
+        public function delete_all_expired_password( $ids, $campaign_app_type) {
+			return $this->wpdb->query($this->wpdb->prepare( "DELETE FROM $this->tbl_name WHERE `campaign_app_type` LIKE '%$campaign_app_type%' and `expired_date` < UNIX_TIMESTAMP(NOW())  or `hits_count` >= `usage_limit`"));
+			 //return $this->wpdb->query($this->wpdb->prepare( "DELETE FROM $this->tbl_name WHERE `campaign_app_type` = %s", $campaign_app_type));
+		 }
+
 		public function delete_passwords_by_post_id( $post_id ) {
 			return $this->wpdb->delete(
 				$this->tbl_name,

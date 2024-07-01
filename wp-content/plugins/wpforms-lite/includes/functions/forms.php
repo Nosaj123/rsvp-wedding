@@ -377,6 +377,17 @@ function wpforms_get_form_fields( $form = false, $allowlist = [] ) {
 	$form_fields = $form['fields'];
 
 	foreach ( $form_fields as $id => $form_field ) {
+		// Remove repeater field and its children.
+		if ( $form_field['type'] === 'repeater' ) {
+			foreach ( (array) $form_field['columns'] as $column ) {
+				$column_fields = $column['fields'] ?? [];
+
+				foreach ( $column_fields as $field_id ) {
+					unset( $form_fields[ $field_id ] );
+				}
+			}
+		}
+
 		if ( ! in_array( $form_field['type'], $allowlist, true ) ) {
 			unset( $form_fields[ $id ] );
 		}
@@ -477,15 +488,17 @@ function wpforms_get_captcha_settings() {
  * Process smart tags.
  *
  * @since 1.7.1
+ * @since 1.8.7 Added `$context` parameter.
  *
  * @param string $content   Content.
  * @param array  $form_data Form data.
  * @param array  $fields    List of fields.
  * @param string $entry_id  Entry ID.
+ * @param string $context   Context.
  *
  * @return string
  */
-function wpforms_process_smart_tags( $content, $form_data, $fields = [], $entry_id = '' ) {
+function wpforms_process_smart_tags( $content, $form_data, $fields = [], $entry_id = '', $context = '' ) {
 
 	// Skip it if variables have invalid format.
 	if ( ! is_string( $content ) || ! is_array( $form_data ) || ! is_array( $fields ) ) {
@@ -496,13 +509,15 @@ function wpforms_process_smart_tags( $content, $form_data, $fields = [], $entry_
 	 * Process smart tags.
 	 *
 	 * @since 1.4.0
+	 * @since 1.8.7 Added $context parameter.
 	 *
 	 * @param string $content   Content.
 	 * @param array  $form_data Form data.
 	 * @param array  $fields    List of fields.
 	 * @param string $entry_id  Entry ID.
+	 * @param string $context   Context.
 	 *
 	 * @return string
 	 */
-	return apply_filters( 'wpforms_process_smart_tags',  $content, $form_data, $fields, $entry_id );
+	return apply_filters( 'wpforms_process_smart_tags',  $content, $form_data, $fields, $entry_id, $context );
 }

@@ -50,7 +50,7 @@ if ( ! class_exists( 'WPvivid_Snapshots_List_Ex' ) )
 
         public function _column_wpvivid_time( $data )
         {
-            $time = date('M-d-Y H:i', $data['time']);
+            $time = gmdate('M-d-Y H:i', $data['time']);
             echo '<td>' . esc_html( $time ) . '</td>';
         }
 
@@ -293,7 +293,7 @@ if ( ! class_exists( 'WPvivid_Snapshots_List_Ex' ) )
             if ( $total_pages >1 && 'top' === $which)
             {
                 ?>
-                <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php esc_attr_e($css_type); ?>">
+                <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php echo esc_attr($css_type); ?>">
                     <input type="submit" id="wpvivid_delete_snapshots_action" class="button action" value="Delete the selected snapshots">
                     <?php
                     $this->extra_tablenav( $which );
@@ -307,7 +307,7 @@ if ( ! class_exists( 'WPvivid_Snapshots_List_Ex' ) )
             else if($total_pages >1)
             {
                 ?>
-                <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php esc_attr_e($css_type); ?>">
+                <div class="tablenav <?php echo esc_attr( $which ); ?>" style="<?php echo esc_attr($css_type); ?>">
                     <?php
                     $this->extra_tablenav( $which );
                     $this->pagination( $which );
@@ -334,7 +334,7 @@ if ( ! class_exists( 'WPvivid_Snapshots_List_Ex' ) )
 
             $this->screen->render_screen_reader_content( 'heading_list' );
             ?>
-            <table class="wp-list-table <?php echo implode( ' ', $this->get_table_classes() ); ?>">
+            <table class="wp-list-table <?php echo esc_attr(implode( ' ', $this->get_table_classes() )); ?>">
                 <thead>
                 <tr>
                     <?php $this->print_column_headers(); ?>

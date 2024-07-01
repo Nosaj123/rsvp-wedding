@@ -56,13 +56,19 @@ class WPvivid_Backup_2
     public function prepare_backup_2()
     {
         global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
 
         try
         {
             if(isset($_POST['backup'])&&!empty($_POST['backup']))
             {
-                $json = $_POST['backup'];
+                $json = sanitize_text_field($_POST['backup']);
                 $json = stripslashes($json);
                 $backup_options = json_decode($json, true);
                 if (is_null($backup_options))
@@ -79,7 +85,7 @@ class WPvivid_Backup_2
                 {
                     $ret['result']='failed';
                     $ret['error']=__('A backup type is required.', 'wpvivid-backuprestore');
-                    echo json_encode($ret);
+                    echo wp_json_encode($ret);
                     die();
                 }
 
@@ -87,7 +93,7 @@ class WPvivid_Backup_2
                 {
                     $ret['result']='failed';
                     $ret['error']=__('Choose at least one storage location for backups.', 'wpvivid-backuprestore');
-                    echo json_encode($ret);
+                    echo wp_json_encode($ret);
                     die();
                 }
 
@@ -95,7 +101,7 @@ class WPvivid_Backup_2
                 {
                     $ret['result']='failed';
                     $ret['error']=__('Choose at least one storage location for backups.', 'wpvivid-backuprestore');
-                    echo json_encode($ret);
+                    echo wp_json_encode($ret);
                     die();
                 }
 
@@ -106,7 +112,7 @@ class WPvivid_Backup_2
                     {
                         $ret['result']='failed';
                         $ret['error'] = __('There is no default remote storage configured. Please set it up first.', 'wpvivid-backuprestore');
-                        echo json_encode($ret);
+                        echo wp_json_encode($ret);
                         die();
                     }
                 }
@@ -121,7 +127,7 @@ class WPvivid_Backup_2
                 {
                     $ret['result']='failed';
                     $ret['error']=__('A task is already running. Please wait until the running task is complete, and try again.', 'wpvivid-backuprestore');
-                    echo json_encode($ret);
+                    echo wp_json_encode($ret);
                     die();
                 }
 
@@ -137,7 +143,7 @@ class WPvivid_Backup_2
                     $ret['html'] = $html;
                 }
 
-                echo json_encode($ret);
+                echo wp_json_encode($ret);
                 die();
             }
         }
@@ -154,15 +160,20 @@ class WPvivid_Backup_2
             $log->CloseFile();
             WPvivid_error_log::create_error_log($log->log_file);
             error_log($message);
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
         }
     }
 
     public function delete_ready_task_2()
     {
-        global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
 
         $tasks = get_option('wpvivid_task_list', array());
         $delete_ids=array();
@@ -184,7 +195,7 @@ class WPvivid_Backup_2
         }
 
         $ret['result'] = 'success';
-        echo json_encode($ret);
+        echo wp_json_encode($ret);
         die();
     }
 
@@ -231,6 +242,7 @@ class WPvivid_Backup_2
         $settings['max_resume_count']=isset($common_setting['max_resume_count'])?$common_setting['max_resume_count']:6;
         $settings['zip_method']=isset($common_setting['zip_method'])?$common_setting['zip_method']:6;
         $settings['is_merge']=isset($common_setting['ismerge'])?$common_setting['ismerge']:true;
+        $settings['save_local']=isset($common_setting['retain_local'])?$common_setting['retain_local']:false;
 
         if(isset($common_setting['zip_method']))
         {
@@ -329,6 +341,14 @@ class WPvivid_Backup_2
 
     public function backup_now_2()
     {
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
+
         register_shutdown_function(array($this,'deal_backup_shutdown_error'));
         $this->end_shutdown_function=false;
 
@@ -340,7 +360,7 @@ class WPvivid_Backup_2
         {
             $ret['result'] = 'failed';
             $ret['error'] = __('We detected that there is already a running backup task. Please wait until it completes then try again.', 'wpvivid-backuprestore');
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
         }
 
@@ -424,7 +444,7 @@ class WPvivid_Backup_2
         {
             $ret['result'] = 'failed';
             $ret['error'] = __('We detected that there is already a running backup task. Please wait until it completes then try again.', 'wpvivid-backuprestore');
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
         }
         $this->end_shutdown_function=false;
@@ -543,11 +563,16 @@ class WPvivid_Backup_2
         global $wpvivid_plugin;
 
         $files=$this->task->get_backup_files();
-        $wpvivid_plugin->wpvivid_log->WriteLog('files: '.json_encode($files),'notice');
+        $wpvivid_plugin->wpvivid_log->WriteLog('files: '.wp_json_encode($files),'notice');
         $remote_options=$this->task->get_remote_options();
 
         $remote_option=array_shift($remote_options);
 
+        if(!class_exists('WPvivid_Remote_collection'))
+        {
+            include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-remote-collection.php';
+            $wpvivid_plugin->remote_collection=new WPvivid_Remote_collection();
+        }
         $remote=$wpvivid_plugin->remote_collection->get_remote($remote_option);
 
         try
@@ -691,6 +716,8 @@ class WPvivid_Backup_2
 
             WPvivid_taskmanager::mark_task($task_id);
 
+            if(!class_exists('WPvivid_mail_report'))
+                include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-mail-report.php';
             WPvivid_mail_report::send_report_mail_ex($task_id);
 
             $task->wpvivid_check_clear_litespeed_rule();
@@ -781,6 +808,8 @@ class WPvivid_Backup_2
             }
 
             $this->clear_monitor_schedule($task_id);
+            if(!class_exists('WPvivid_mail_report'))
+                include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-mail-report.php';
             WPvivid_mail_report::send_report_mail_ex($task_id);
 
             WPvivid_taskmanager::mark_task($task_id);
@@ -882,19 +911,24 @@ class WPvivid_Backup_2
 
     public function list_tasks()
     {
-        global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
         try
         {
             $ret = $this->_list_tasks();
 
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
         }
         catch (Exception $error)
         {
             $message = 'An exception has occurred. class: '.get_class($error).';msg: '.$error->getMessage().';code: '.$error->getCode().';line: '.$error->getLine().';in_file: '.$error->getFile().';';
             error_log($message);
-            echo json_encode(array('result'=>'failed','error'=>$message));
+            echo wp_json_encode(array('result'=>'failed','error'=>$message));
             die();
         }
 
@@ -947,7 +981,24 @@ class WPvivid_Backup_2
                     $ret['task_no_response']=true;
                 }
 
-                $ret['progress_html'] = '<div class="wpvivid-one-coloum wpvivid-workflow wpvivid-clear-float"><p><span class="wpvivid-span-progress"><span class="wpvivid-span-processed-progress wpvivid-span-processed-percent-progress" style="width:'.$info['task_info']['backup_percent'].'">'.$info['task_info']['backup_percent'].' completed</span></span></p><p><span class="dashicons dashicons-admin-page wpvivid-dashicons-green"></span><span>Total Size:</span><span>'.$info['task_info']['total'].'</span><span class="dashicons dashicons-upload wpvivid-dashicons-blue"></span><span>Uploaded:</span><span>'.$info['task_info']['upload'].'</span><span class="dashicons dashicons-plugins-checked wpvivid-dashicons-green"></span><span>Speed:</span><span>'.$info['task_info']['speed'].'</span><span class="dashicons dashicons-networking wpvivid-dashicons-green"></span><span>Network Connection:</span><span>'.$info['task_info']['network_connection'].'</span></p><p><span class="dashicons dashicons-welcome-write-blog wpvivid-dashicons-grey"></span><span>Action:</span><span id="wpvivid_current_doing">'.$info['task_info']['descript'].'</span></p><div><input class="button-primary" id="wpvivid_backup_cancel_btn" type="submit" value="Cancel" style="'.$info['task_info']['css_btn_cancel'].'"></div></div>';
+                $ret['progress_html'] = '<div class="action-progress-bar" id="wpvivid_action_progress_bar">
+                                                <div class="action-progress-bar-percent" id="wpvivid_action_progress_bar_percent" style="height:24px;width:'.$info['task_info']['backup_percent'].'"></div>
+                                             </div>
+                                             <div id="wpvivid_estimate_upload_info" style="float: left;"> 
+                                                <div class="backup-basic-info"><span class="wpvivid-element-space-right">' . __('Total Size:', 'wpvivid-backuprestore') . '</span><span>'.$info['task_info']['total'].'</span></div>
+                                                <div class="backup-basic-info"><span class="wpvivid-element-space-right">' . __('Uploaded:', 'wpvivid-backuprestore') . '</span><span>'.$info['task_info']['upload'].'</span></div>
+                                                <div class="backup-basic-info"><span class="wpvivid-element-space-right">' . __('Speed:', 'wpvivid-backuprestore') . '</span><span>'.$info['task_info']['speed'].'</span></div>
+                                             </div>
+                                             <div style="float: left;">
+                                                <div class="backup-basic-info"><span class="wpvivid-element-space-right">' . __('Network Connection:', 'wpvivid-backuprestore') . '</span><span>'.$info['task_info']['network_connection'].'</span></div>
+                                             </div>
+                                             <div style="clear:both;"></div>
+                                             <div style="margin-left:10px; float: left; width:100%;"><p id="wpvivid_current_doing">'.$info['task_info']['descript'].'</p></div>
+                                             <div style="clear: both;"></div>
+                                             <div>
+                                                <div id="wpvivid_backup_cancel" class="backup-log-btn"><input class="button-primary" id="wpvivid_backup_cancel_btn" type="submit" value="' . esc_attr('Cancel', 'wpvivid-backuprestore') . '" style="'.$info['task_info']['css_btn_cancel'].'" /></div>
+                                             </div>
+                                             <div style="clear: both;"></div>';
             }
         }
 
@@ -1024,17 +1075,24 @@ class WPvivid_Backup_2
                     $ret['task_no_response']=true;
                 }
 
-                $ret['progress_html'] = '<div class="wpvivid-one-coloum wpvivid-workflow wpvivid-clear-float">
-                                            <p><span class="wpvivid-span-progress"><span class="wpvivid-span-processed-progress wpvivid-span-processed-percent-progress" style="width:'.$info['task_info']['backup_percent'].'">'.$info['task_info']['backup_percent'].' completed</span></span></p>
-                                            <p>
-                                                <span class="dashicons dashicons-admin-page wpvivid-dashicons-green"></span><span>Total Size:</span><span>'.$info['task_info']['total'].'</span>
-                                                <span class="dashicons dashicons-upload wpvivid-dashicons-blue"></span><span>Uploaded:</span><span>'.$info['task_info']['upload'].'</span>
-                                                <span class="dashicons dashicons-plugins-checked wpvivid-dashicons-green"></span><span>Speed:</span><span>'.$info['task_info']['speed'].'</span>
-                                                <span class="dashicons dashicons-networking wpvivid-dashicons-green"></span><span>Network Connection:</span><span>'.$info['task_info']['network_connection'].'</span>
-                                            </p>
-                                            <p><span class="dashicons dashicons-welcome-write-blog wpvivid-dashicons-grey"></span><span>Action:</span><span id="wpvivid_current_doing">'.$info['task_info']['descript'].'</span></p>
-                                            <div><input class="button-primary" id="wpvivid_backup_cancel_btn" type="submit" value="Cancel" style="'.$info['task_info']['css_btn_cancel'].'"></div>
-                                        </div>';
+                $ret['progress_html'] = '<div class="action-progress-bar" id="wpvivid_action_progress_bar">
+                                                <div class="action-progress-bar-percent" id="wpvivid_action_progress_bar_percent" style="height:24px;width:'.$info['task_info']['backup_percent'].'"></div>
+                                             </div>
+                                             <div id="wpvivid_estimate_upload_info" style="float: left;"> 
+                                                <div class="backup-basic-info"><span class="wpvivid-element-space-right">' . __('Total Size:', 'wpvivid-backuprestore') . '</span><span>'.$info['task_info']['total'].'</span></div>
+                                                <div class="backup-basic-info"><span class="wpvivid-element-space-right">' . __('Uploaded:', 'wpvivid-backuprestore') . '</span><span>'.$info['task_info']['upload'].'</span></div>
+                                                <div class="backup-basic-info"><span class="wpvivid-element-space-right">' . __('Speed:', 'wpvivid-backuprestore') . '</span><span>'.$info['task_info']['speed'].'</span></div>
+                                             </div>
+                                             <div style="float: left;">
+                                                <div class="backup-basic-info"><span class="wpvivid-element-space-right">' . __('Network Connection:', 'wpvivid-backuprestore') . '</span><span>'.$info['task_info']['network_connection'].'</span></div>
+                                             </div>
+                                             <div style="clear:both;"></div>
+                                             <div style="margin-left:10px; float: left; width:100%;"><p id="wpvivid_current_doing">'.$info['task_info']['descript'].'</p></div>
+                                             <div style="clear: both;"></div>
+                                             <div>
+                                                <div id="wpvivid_backup_cancel" class="backup-log-btn"><input class="button-primary" id="wpvivid_backup_cancel_btn" type="submit" value="' . esc_attr('Cancel', 'wpvivid-backuprestore') . '" style="'.$info['task_info']['css_btn_cancel'].'" /></div>
+                                             </div>
+                                             <div style="clear: both;"></div>';
             }
 
             if($info['status']['str']=='completed')
@@ -1068,11 +1126,11 @@ class WPvivid_Backup_2
         if($backup_success_count>0)
         {
             $notice_msg = $backup_success_count.' backup task(s) finished. Please switch to <a href="#" onclick="wpvivid_click_switch_page(\'wrap\', \'wpvivid_tab_log\', true);">Log</a> page to check the details.';
-            $ret['success_notice_html'] =__('<div class="notice notice-success is-dismissible inline" style="margin-bottom: 5px;"><p>'.$notice_msg.'</p>
+            $ret['success_notice_html'] ='<div class="notice notice-success is-dismissible inline" style="margin-bottom: 5px;"><p>'.$notice_msg.'</p>
                                     <button type="button" class="notice-dismiss" onclick="click_dismiss_notice(this);">
                                     <span class="screen-reader-text">Dismiss this notice.</span>
                                     </button>
-                                    </div>');
+                                    </div>';
         }
 
         //<a href="#" onclick="wpvivid_click_switch_page('wrap', 'wpvivid_tab_log', true);">Log</a>
@@ -1080,7 +1138,7 @@ class WPvivid_Backup_2
         {
             $admin_url = apply_filters('wpvivid_get_admin_url', '');
             $notice_msg = $backup_failed_count.' backup task(s) have been failed. Please switch to <a href="#" onclick="wpvivid_click_switch_page(\'wrap\', \'wpvivid_tab_debug\', true);">Log</a> page to send us the debug information.';
-            $ret['error_notice_html'] =__('<div class="notice notice-error inline" style="margin-bottom: 5px;"><p>'.$notice_msg.'</p></div>');
+            $ret['error_notice_html'] ='<div class="notice notice-error inline" style="margin-bottom: 5px;"><p>'.$notice_msg.'</p></div>';
         }
 
         $delete_ids=array();
@@ -1103,8 +1161,13 @@ class WPvivid_Backup_2
 
     public function shutdown_backup()
     {
-        global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
 
         $task_id = sanitize_key($_POST['task_id']);
         $backup_task=new WPvivid_Backup_Task_2($task_id);
@@ -1117,14 +1180,19 @@ class WPvivid_Backup_2
             $ret['result'] = 'failed';
         }
 
-        echo json_encode($ret);
+        echo wp_json_encode($ret);
         die();
     }
 
     public function delete_task()
     {
-        global $wpvivid_plugin;
-        $wpvivid_plugin->ajax_check_security();
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
 
         if (isset($_POST['task_id']) && !empty($_POST['task_id']) && is_string($_POST['task_id']))
         {
@@ -1134,8 +1202,8 @@ class WPvivid_Backup_2
             unset($options[$task_id]);
 
             update_option('wpvivid_task_list',$options);
-
-            echo $json['result'] = 'success';
+            $json['result'] = 'success';
+            echo wp_json_encode($json);
         }
 
         die();
@@ -1380,6 +1448,8 @@ class WPvivid_Backup_2
                 }
                 if(!empty($files))
                 {
+                    if(!class_exists('WPvivid_Upload'))
+                        include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-upload.php';
                     $upload=new WPvivid_Upload();
                     $upload->clean_remote_backup($task->get_remote_options(),$files);
                 }
@@ -1462,8 +1532,13 @@ class WPvivid_Backup_2
     {
         try
         {
-            global $wpvivid_plugin;
-            $wpvivid_plugin->ajax_check_security();
+            check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+            $check=current_user_can('manage_options');
+            $check=apply_filters('wpvivid_ajax_check_security',$check);
+            if(!$check)
+            {
+                die();
+            }
 
             $options = WPvivid_Setting::get_option('wpvivid_saved_api_token');
 
@@ -1471,7 +1546,7 @@ class WPvivid_Backup_2
             {
                 $ret['result'] = 'failed';
                 $ret['error'] = __('A key is required.', 'wpvivid-backuprestore');
-                echo json_encode($ret);
+                echo wp_json_encode($ret);
                 die();
             }
 
@@ -1485,7 +1560,7 @@ class WPvivid_Backup_2
             {
                 $ret['result'] = 'failed';
                 $ret['error'] = __('The key is invalid.', 'wpvivid-backuprestore');
-                echo json_encode($ret);
+                echo wp_json_encode($ret);
                 die();
             }
 
@@ -1493,12 +1568,12 @@ class WPvivid_Backup_2
             {
                 $ret['result'] = 'failed';
                 $ret['error'] =  __('The key has expired.', 'wpvivid-backuprestore');
-                echo json_encode($ret);
+                echo wp_json_encode($ret);
                 die();
             }
 
             $json['test_connect']=1;
-            $json=json_encode($json);
+            $json=wp_json_encode($json);
             $crypt=new WPvivid_crypt(base64_decode($options[$url]['token']));
             $data=$crypt->encrypt_message($json);
             $data=base64_encode($data);
@@ -1509,7 +1584,7 @@ class WPvivid_Backup_2
             {
                 $ret['result']=WPVIVID_FAILED;
                 $ret['error']= $response->get_error_message();
-                echo json_encode($ret);
+                echo wp_json_encode($ret);
                 die();
             }
             else
@@ -1526,7 +1601,7 @@ class WPvivid_Backup_2
                         {
                             $ret['result']=WPVIVID_FAILED;
                             $ret['error']= $res['error'];
-                            echo json_encode($ret);
+                            echo wp_json_encode($ret);
                             die();
                         }
                     }
@@ -1534,14 +1609,14 @@ class WPvivid_Backup_2
                         $ret['result']=WPVIVID_FAILED;
                         $ret['error']= 'failed to parse returned data, unable to establish connection with the target site.';
                         $ret['response']=$response;
-                        echo json_encode($ret);
+                        echo wp_json_encode($ret);
                         die();
                     }
                 }
                 else {
                     $ret['result']=WPVIVID_FAILED;
                     $ret['error']= 'upload error '.$response['response']['code'].' '.$response['body'];
-                    echo json_encode($ret);
+                    echo wp_json_encode($ret);
                     die();
                 }
             }
@@ -1550,7 +1625,7 @@ class WPvivid_Backup_2
             {
                 $ret['result'] = 'failed';
                 $ret['error'] = __('A task is already running. Please wait until the running task is complete, and try again.', 'wpvivid-backuprestore');
-                echo json_encode($ret);
+                echo wp_json_encode($ret);
                 die();
             }
 
@@ -1559,7 +1634,7 @@ class WPvivid_Backup_2
             $remote_option['type'] = WPVIVID_REMOTE_SEND_TO_SITE;
             $remote_options['temp'] = $remote_option;
 
-            $backup_options = stripslashes($_POST['backup_options']);
+            $backup_options = stripslashes(sanitize_text_field($_POST['backup_options']));
             $backup_options = json_decode($backup_options, true);
             $backup['backup_files'] = $backup_options['transfer_type'];
             $backup['local'] = 0;
@@ -1576,7 +1651,7 @@ class WPvivid_Backup_2
             $task_id = $ret['task_id'];
             global $wpvivid_plugin;
             $wpvivid_plugin->check_backup($task_id, $backup);
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
             */
 
@@ -1584,19 +1659,27 @@ class WPvivid_Backup_2
             $task=new WPvivid_Backup_Task_2();
             $ret=$task->new_backup_task($backup,$settings);
 
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
         }
         catch (Exception $e){
             $ret['result'] = 'failed';
             $ret['error'] = $e->getMessage();
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
         }
     }
 
     public function migrate_now()
     {
+        check_ajax_referer( 'wpvivid_ajax', 'nonce' );
+        $check=current_user_can('manage_options');
+        $check=apply_filters('wpvivid_ajax_check_security',$check);
+        if(!$check)
+        {
+            die();
+        }
+
         register_shutdown_function(array($this,'deal_backup_shutdown_error'));
         $this->end_shutdown_function=false;
 
@@ -1608,7 +1691,7 @@ class WPvivid_Backup_2
         {
             $ret['result'] = 'failed';
             $ret['error'] = __('We detected that there is already a running backup task. Please wait until it completes then try again.', 'wpvivid-backuprestore');
-            echo json_encode($ret);
+            echo wp_json_encode($ret);
             die();
         }
 

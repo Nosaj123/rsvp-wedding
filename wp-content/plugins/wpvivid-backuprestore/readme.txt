@@ -1,10 +1,10 @@
 === Migration, Backup, Staging - WPvivid===
 Contributors: wpvivid
-Tags: duplicate, clone, migrate, staging, backup, restore, auto backup, cloud backup
+Tags: duplicate, clone, migrate, staging, backup
 Requires at least: 4.5
-Tested up to: 6.4.2
+Tested up to: 6.6
 Requires PHP: 5.3
-Stable tag: 0.9.94
+Stable tag: 0.9.103
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
@@ -97,6 +97,52 @@ Yes, absolutely. Whenever you need help, start a thread on the [support forum](h
 Yes, we do. Here are the guides for [migrating your site to a new host](https://wpvivid.com/get-started-transfer-site.html), [creating a manual backup](https://wpvivid.com/get-started-create-a-manual-backup.html), [restoring your site from a backup](https://wpvivid.com/get-started-restore-site.html), and more on [our docs page](https://wpvivid.com/documents).
 
 == Changelog ==
+= 0.9.103 =
+- Fixed: Restore would fail when a backup contained mu-plugins/wp-stack-cache.php.
+- Fixed some bugs in the plugin code.
+- Refined and optimized the plugin code.
+- Successfully tested with WordPress 6.6.
+= 0.9.102 =
+- Added: Cloud storage tokens are now encrypted in the database.
+- Added: lotties folder (if any) will be included in backups by default.
+- Fixed: Domain could not be replaced during migration in some cases.
+- Fixed: Adding Digital Ocean Space would fail in some cases.
+- Fixed: Images added via ACF plugin would be scanned as unused.
+- Fixed some bugs in the plugin code.
+- Optimized the plugin code.
+= 0.9.101 =
+- Fixed: Retention settings did not work for scheduled backups.
+- Fixed: Scanning unused images would fail in some cases.
+= 0.9.100 =
+- Added a column to the backup list to show the backup size.
+- Fixed: URLs could not be replaced during migration in some cases.
+- Fixed: Adding SFTP remote storage could fail in some cases.
+- Fixed a vulnerability in the plugin code.
+= 0.9.99 =
+- Fixed: Scheduled database backups could fail in some cases.
+- Optimized the plugin code.
+- Successfully tested with WordPress 6.5.
+= 0.9.98 =
+- Fixed: Backups to OneDrive failed in some environments.
+- Fixed some PHP warnings.
+- Optimized the plugin code.
+= 0.9.97 =
+- Fixed some vulnerable code and optimized the plugin code.
+- Fixed: The option 'Keep backups in local after uploading them to cloud' could not take effect.
+- Successfully tested with WordPress 6.4.3.
+= 0.9.96 =
+- Fixed: Restore could fail when max_allowe_packet of the server is low.
+- Fixed some bugs in the plugin code.
+- Optimized the plugin code.
+- Successfully tested with WordPress 6.4.3.
+= 0.9.95 =
+- Fixed: Backup to SFTP would fail in some environments.
+- Fixed: Backup to Google Drive would fail in some environments.
+- Fixed: Creating a staging site would fail in some cases.
+- Fixed: Some special characters would not display properly after website migration.
+- Fixed some vulnerabilities in the plugin code.
+- Fixed some bugs in the plugin code.
+- Optimized the plugin code.
 = 0.9.94 =
 - Fixed: Prefix of tables with foreign keys would not be replaced in a migration process.
 - Fixed: Corrupted backups would not be detected in some environments.
@@ -562,7 +608,9 @@ Yes, we do. Here are the guides for [migrating your site to a new host](https://
 - Initial release of the plugin. Now you see it.
 
 == Upgrade Notice ==
-Latest version 0.9.93:
-- Added support for migration of sites without a database prefix.
+Latest version 0.9.103:
+= 0.9.103 =
+- Fixed: Restore would fail when a backup contained mu-plugins/wp-stack-cache.php.
 - Fixed some bugs in the plugin code.
-- Optimized the plugin code.
+- Refined and optimized the plugin code.
+- Successfully tested with WordPress 6.6.

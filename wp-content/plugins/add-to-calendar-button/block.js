@@ -90,6 +90,18 @@ function atcbParseAttributes( name, options, others, prokey, isPro = false ) {
 			}
 		}
 	}
+	// for description, dates, and customLabels, we replace any [ with { and any ] with } to avoid conflicts with the shortcode
+	if ( attributes[ 'description' ] !== undefined ) {
+		attributes[ 'description' ] = attributes[ 'description' ].replace( /\[/g, '{' ).replace( /\]/g, '}' );
+	}
+	if ( attributes[ 'dates' ] !== undefined ) {
+		// for dates, we also need to make sure the JSON stays valid
+		attributes[ 'dates' ] = attributes[ 'dates' ].replace( /\[/g, '{' ).replace( /\]/g, '}' ).replace( /^{{/, '{' ).replace( /}}$/, '}' );
+
+	}
+	if ( attributes[ 'customLabels' ] !== undefined ) {
+		attributes[ 'customLabels' ] = attributes[ 'customLabels' ].replace( /\[/g, '{' ).replace( /\]/g, '}' );
+	}
 	// validating whether prokey, name, and options are already set and only take the explicit fields, if not
 	if ( isPro && attributes[ 'prokey' ] === undefined && prokey && prokey !== '' ) {
 		// only add if valid UUID
@@ -305,8 +317,18 @@ registerBlockType( 'add-to-calendar/button', {
 	},
 	save: function ( props ) {
 		const { attributes } = props;
-		return createElement( 'add-to-calendar-button', {
-			...atcbParseAttributes( attributes.name, attributes.options, attributes.content, attributes.prokey, attributes.isPro ),
-		} );
+    const tagAttributes = atcbParseAttributes( attributes.name, attributes.options, attributes.content, attributes.prokey, attributes.isPro );
+    // construct the shortcode string
+    let shortcode = `[add-to-calendar-button`;
+    // add attributes
+		Object.keys(tagAttributes).forEach(key => {
+			if (tagAttributes[key]) {
+				// replace any quotes with &quot; to avoid conflicts with the shortcode
+				tagAttributes[key] = tagAttributes[key].replace(/"/g, '&quot;');
+				shortcode += ` ${key}="${tagAttributes[key]}"`;
+			}
+		});
+    shortcode += `]`;
+    return shortcode;
 	},
 } );
